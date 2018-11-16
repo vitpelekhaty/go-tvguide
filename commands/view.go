@@ -1,0 +1,159 @@
+package commands
+
+import (
+	"errors"
+	"fmt"
+	"log"
+
+	"github.com/jroimartin/gocui"
+
+	"github.com/spf13/cobra"
+
+	"github.com/vbauerster/mpb"
+	"github.com/vbauerster/mpb/decor"
+
+	pl "../playlists"
+	ui "../ui"
+)
+
+var cmdView = &cobra.Command{
+	Use:   "view",
+	Short: "Viewing TV guide",
+	Long:  "Viewing TV guide for the specified playlist",
+
+	RunE: func(cmd *cobra.Command, args []string) error {
+
+		path := PlaylistPath
+		loader := pl.Loader(path)
+
+		data, err := loadPlaylistOrGuide(loader, path)
+
+		if err != nil {
+			return err
+		}
+
+		parser := pl.PlaylistParser(data)
+
+		if parser == nil {
+			return errors.New("Playlist view: unknown playlist format")
+		}
+
+		playlist := pl.CurrentPlaylist()
+		guide := pl.CurrentGuide()
+
+		fitem := func(item *pl.PlaylistItem) {
+			if err := playlist.AppendItem(item); err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		err = parser.AsyncParse(data, fitem)
+
+		if err != nil {
+			return err
+		}
+
+		gpath := parser.Guide()
+		gloader := pl.Loader(gpath)
+
+		data, err = loadPlaylistOrGuide(gloader, gpath)
+
+		if err != nil {
+			return err
+		}
+
+		gparser := &pl.XMLTVParser{}
+
+		fchannel := func(ch *pl.XMLTVChannel) {
+			if err := guide.AppendChannel(ch); err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		gparser.OnChannel = fchannel
+
+		err = gparser.Parse(data)
+
+		if err != nil {
+			return err
+		}
+
+		gui, err := ui.NewPlaylistViewer(playlist)
+
+		if err != nil {
+			return err
+		}
+
+		defer gui.Close()
+
+		if err := gui.MainLoop(); err != nil && err != gocui.ErrQuit {
+			return err
+		}
+
+		return nil
+	},
+}
+
+func loadPlaylistOrGuide(loader pl.ILoader, path string) ([]byte, error) {
+
+	data := make([]byte, 0)
+
+	switch loader.(type) {
+	case *pl.FileLoader:
+		if floader, ok := loader.(*pl.FileLoader); ok {
+			return loadFromFile(floader, path)
+		}
+
+		return data, errors.New("Playlist or guide loading: something wrong")
+
+	case *pl.HTTPLoader:
+		if nloader, ok := loader.(*pl.HTTPLoader); ok {
+			return loadFromURL(nloader, path)
+		}
+
+		return data, errors.New("Playlist or guide loading: something wrong")
+
+	case nil:
+		return data, errors.New("Playlist or guide loading: invalid path")
+	}
+
+	return data, nil
+}
+
+func loadFromFile(loader *pl.FileLoader, path string) ([]byte, error) {
+
+	fmt.Printf("Loading file %s\t...\n", path)
+	return loader.Load(path)
+}
+
+func loadFromURL(loader *pl.HTTPLoader, url string) ([]byte, error) {
+
+	var total int64 = int64(loader.Total)
+	comment := "Downloading " + url
+
+	pb := mpb.New(mpb.WithWidth(40))
+
+	bar := pb.AddBar(total,
+		mpb.PrependDecorators(
+			decor.Name(comment, decor.WC{W: len(comment) + 1, C: decor.DidentRight}),
+			decor.OnComplete(decor.EwmaETA(decor.ET_STYLE_GO, 60, decor.WC{W: 4}), "done")),
+		mpb.AppendDecorators(decor.Percentage()))
+
+	fprogress := func(complete, total uint64) {
+
+		if complete > total {
+			bar.SetTotal(int64(complete+10), false)
+		}
+
+		bar.IncrBy(int(complete))
+	}
+
+	fdone := func() {
+		pb.Wait()
+	}
+
+	loader.OnProgress = fprogress
+	loader.OnDone = fdone
+
+	return loader.Load(url)
+}
