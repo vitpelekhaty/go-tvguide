@@ -22,6 +22,9 @@ import (
 	"io"
 )
 
+// Description of XMLTV guide format
+// For more details see https://github.com/XMLTV/xmltv/blob/master/xmltv.dtd
+
 // XMLTVHead - the root element
 type XMLTVHead struct {
 	XMLName           xml.Name `xml:"tv"`
@@ -39,13 +42,13 @@ type XMLTVChannelDisplayName struct {
 	Value   string   `xml:",chardata"`
 }
 
-// XMLTVChannelURL contains URLs of the channel
+// XMLTVChannelURL - an URL where you can find out more about the channel
 type XMLTVChannelURL struct {
 	XMLName xml.Name `xml:"url"`
 	Value   string   `xml:",chardata"`
 }
 
-// XMLTVChannel contains info about channel
+// XMLTVChannel - details of the channel
 type XMLTVChannel struct {
 	XMLName     xml.Name                  `xml:"channel"`
 	ID          string                    `xml:"id,attr"`
@@ -53,7 +56,7 @@ type XMLTVChannel struct {
 	URL         []XMLTVChannelURL         `xml:"url"`
 }
 
-// XMLTVProgramme contains info about tv programme
+// XMLTVProgramme - details of the single programme transmission
 type XMLTVProgramme struct {
 	XMLName           xml.Name                         `xml:"programme"`
 	Channel           string                           `xml:"channel"`
@@ -88,30 +91,34 @@ type XMLTVProgramme struct {
 	Review            []XMLTVProgrammeReview           `xml:"review"`
 }
 
+// XMLTVProgrammeValue - the value of the element that contains it
 type XMLTVProgrammeValue struct {
 	XMLName xml.Name `xml:"value"`
 	Value   string   `xml:",chardata"`
 }
 
-// XMLTVProgrammeTitle contans title of the programme
+// XMLTVProgrammeTitle - programme title
 type XMLTVProgrammeTitle struct {
 	XMLName xml.Name `xml:"title"`
 	Lang    string   `xml:"lang,attr"`
 	Value   string   `xml:",chardata"`
 }
 
+// XMLTVProgrammeSubTitle - sub-title or episode title
 type XMLTVProgrammeSubTitle struct {
 	XMLName xml.Name `xml:"sub-title"`
 	Lang    string   `xml:"lang,attr"`
 	Value   string   `xml:",chardata"`
 }
 
+// XMLTVProgrammeDesc - description of the programme or episode
 type XMLTVProgrammeDesc struct {
 	XMLName xml.Name `xml:"desc"`
 	Lang    string   `xml:"lang,attr"`
 	Value   string   `xml:",chardata"`
 }
 
+// XMLTVProgrammeCredits - credits for the programme
 type XMLTVProgrammeCredits struct {
 	XMLName      xml.Name              `xml:"credits"`
 	Directors    []string              `xml:"director"`
@@ -126,42 +133,50 @@ type XMLTVProgrammeCredits struct {
 	Guests       []string              `xml:"guest"`
 }
 
+// XMLTVProgrammeActor - item of the list of actors
 type XMLTVProgrammeActor struct {
 	XMLName xml.Name `xml:"actor"`
 	Role    string   `xml:"role,attr"`
 	Name    string   `xml:",chardata"`
 }
 
+// XMLTVProgrammeCategory - type of programme
 type XMLTVProgrammeCategory struct {
 	XMLName xml.Name `xml:"category"`
 	Lang    string   `xml:"lang,attr"`
 	Value   string   `xml:",chardata"`
 }
 
+// XMLTVProgrammeKeyword - keywords for the programme
 type XMLTVProgrammeKeyword struct {
 	XMLName xml.Name `xml:"keyword"`
 	Lang    string   `xml:"lang,attr"`
 	Value   string   `xml:",chardata"`
 }
 
+// XMLTVProgrammeLanguage - the language the programme will be broadcast in
 type XMLTVProgrammeLanguage struct {
 	XMLName xml.Name `xml:"language"`
 	Lang    string   `xml:"lang,attr"`
 	Value   string   `xml:",chardata"`
 }
 
+// XMLTVProgrammeOriginalLanguage - the original language, before dubbing
 type XMLTVProgrammeOriginalLanguage struct {
 	XMLName xml.Name `xml:"orig-language"`
 	Lang    string   `xml:"lang,attr"`
 	Value   string   `xnl:",chardata"`
 }
 
+// XMLTVProgrammeLength - the true length of the programme, not counting advertisements
+// or trailers
 type XMLTVProgrammeLength struct {
 	XMLName xml.Name `xml:"length"`
 	Units   string   `xml:"units,attr"`
 	Value   string   `xml:",chardata"`
 }
 
+// XMLTVProgrammeIcon - an icon associated with the element that contains it
 type XMLTVProgrammeIcon struct {
 	XMLName xml.Name `xml:"icon"`
 	Src     string   `xml:"src,attr"`
@@ -169,18 +184,22 @@ type XMLTVProgrammeIcon struct {
 	Height  string   `xml:"height,attr"`
 }
 
+// XMLTVProgrammeCountry - the country where the programme was made or one of the countries in
+// a joint production
 type XMLTVProgrammeCountry struct {
 	XMLName xml.Name `xml:"country"`
 	Lang    string   `xml:"lang,attr"`
 	Value   string   `xml:",chardata"`
 }
 
+// XMLTVProgrammeEpisodeNum - episode number
 type XMLTVProgrammeEpisodeNum struct {
 	XMLName xml.Name `xml:"episode-num"`
 	System  string   `xml:"system,attr"`
 	Value   string   `xml:",chardata"`
 }
 
+// XMLTVProgrammeVideo - video details
 type XMLTVProgrammeVideo struct {
 	XMLName xml.Name `xml:"video"`
 	Present string   `xml:"present"`
@@ -189,36 +208,43 @@ type XMLTVProgrammeVideo struct {
 	Quality string   `xml:"quality"`
 }
 
+// XMLTVProgrammeAudio - audio details
 type XMLTVProgrammeAudio struct {
 	XMLName xml.Name `xml:"audio"`
 	Present string   `xml:"present"`
 	Stereo  string   `xml:"stereo"`
 }
 
+// XMLTVProgrammePreviouslyShown - when and where the programme was
+// last shown, if known
 type XMLTVProgrammePreviouslyShown struct {
 	XMLName xml.Name `xml:"previously-shown"`
 	Start   string   `xml:"start,attr"`
 	Channel string   `xml:"channel,attr"`
 }
 
+// XMLTVProgrammePremiere - premiere, if known
 type XMLTVProgrammePremiere struct {
 	XMLName xml.Name `xml:"premiere"`
 	Lang    string   `xml:"lang,attr"`
 	Value   string   `xml:",chardata"`
 }
 
+// XMLTVProgrammmeLastChance - in a way this is the opposite of premiere
 type XMLTVProgrammmeLastChance struct {
 	XMLName xml.Name `xml:"last-chance"`
 	Lang    string   `xml:"lang,attr"`
 	Value   string   `xml:",chardata"`
 }
 
+// XMLTVProgrammeSubtitles - subtitles
 type XMLTVProgrammeSubtitles struct {
 	XMLName  xml.Name                 `xml:"subtitles"`
 	Type     string                   `xml:"type,attr"`
 	Language []XMLTVProgrammeLanguage `xml:"language"`
 }
 
+// XMLTVProgrammeRating - rating
 type XMLTVProgrammeRating struct {
 	XMLName xml.Name            `xml:"rating"`
 	System  string              `xml:"system"`
@@ -226,6 +252,7 @@ type XMLTVProgrammeRating struct {
 	Icon    XMLTVProgrammeIcon  `xml:"icon"`
 }
 
+// XMLTVProgrammeStarRating - star rating
 type XMLTVProgrammeStarRating struct {
 	XMLName xml.Name            `xml:"star-rating"`
 	System  string              `xml:"system"`
@@ -233,6 +260,7 @@ type XMLTVProgrammeStarRating struct {
 	Icon    XMLTVProgrammeIcon  `xml:"icon"`
 }
 
+// XMLTVProgrammeReview - review
 type XMLTVProgrammeReview struct {
 	XMLName  xml.Name `xml:"review"`
 	Type     string   `xml:"type,attr"`
