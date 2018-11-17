@@ -54,9 +54,12 @@ var (
 	g  *Guide
 )
 
+var dbname = getPlaylistDatabaseName()
+
 func init() {
 
-	db, err := sql.Open("sqlite3", ":memory:")
+	fmt.Println(dbname)
+	db, err := sql.Open("sqlite3", dbname)
 
 	if err != nil {
 		log.Fatal(err)
@@ -82,44 +85,48 @@ func CurrentGuide() *Guide {
 	return g
 }
 
-const sqlCreatePlaylistTable = `CREATE TABLE playlist(
-    id text,
-    channels_group text,
-    channel text,
-    source text	
-)
-`
-const sqlCreateChannelsTable = `CREATE TABLE channels(
-	channel_id text,
-	display_name_lang text,
-	display_name text
-)
-`
+const (
+	cmdCreatePlaylistTable = `CREATE TABLE playlist(
+ 	   	id text,
+    	channels_group text,
+    	channel text,
+    	source text	
+	)
+	`
 
-const sqlCreateChannelURLTable = `CREATE TABLE channels_urls(
-	channel_id text,
-	url text
+	cmdCreateIndexChannelID = `CREATE INDEX ix_playlist_channel_id ON playlist(id)`
+
+	cmdCreateChannelsTable = `CREATE TABLE channels(
+		channel_id text,
+		display_name_lang text,
+		display_name text
+	)
+	`
+
+	cmdCreateChannelURLTable = `CREATE TABLE channels_urls(
+		channel_id text,
+		url text
+	)
+	`
 )
-`
 
 func initDatabaseStructure(db *sql.DB) (err error) {
 
-	if err = createTablePlaylist(db); err != nil {
-		return
-	}
+	objects := [4]string{cmdCreatePlaylistTable, cmdCreateIndexChannelID, cmdCreateChannelsTable,
+		cmdCreateChannelURLTable}
 
-	if err = createTableChannels(db); err != nil {
-		return
-	}
+	for _, dbobj := range objects {
+		err = execsql(dbobj, db)
 
-	if err = createTableChannelsURL(db); err != nil {
-		return
+		if err != nil {
+			return
+		}
 	}
 
 	return
 }
 
-func createTable(cmd string, db *sql.DB) error {
+func execsql(cmd string, db *sql.DB) error {
 
 	stmt, err := db.Prepare(cmd)
 
@@ -136,19 +143,7 @@ func createTable(cmd string, db *sql.DB) error {
 	return nil
 }
 
-func createTablePlaylist(db *sql.DB) error {
-	return createTable(sqlCreatePlaylistTable, db)
-}
-
-func createTableChannels(db *sql.DB) error {
-	return createTable(sqlCreateChannelsTable, db)
-}
-
-func createTableChannelsURL(db *sql.DB) error {
-	return createTable(sqlCreateChannelURLTable, db)
-}
-
-const sqlSelectGroups = `SELECT pl.channels_group FROM playlist AS pl
+const cmdSelectGroups = `SELECT pl.channels_group FROM playlist AS pl
 GROUP BY pl.channels_group
 ORDER BY rowid
 `
@@ -160,7 +155,7 @@ func (p *Playlist) Groups() []string {
 
 	g := make([]string, 0)
 
-	stmt, err := p.db.Prepare(sqlSelectGroups)
+	stmt, err := p.db.Prepare(cmdSelectGroups)
 
 	if err != nil {
 		return g
@@ -192,7 +187,7 @@ func (p *Playlist) Groups() []string {
 	return g
 }
 
-const sqlSelectGroupCount = `SELECT COUNT(*) AS cc FROM (
+const cmdSelectGroupCount = `SELECT COUNT(*) AS cc FROM (
 	SELECT pl.channels_group FROM playlist AS pl
 	GROUP BY pl.channels_group
 ) AS items
@@ -203,7 +198,7 @@ func (p *Playlist) GroupCount() int {
 
 	var count int
 
-	stmt, err := p.db.Prepare(sqlSelectGroupCount)
+	stmt, err := p.db.Prepare(cmdSelectGroupCount)
 
 	if err != nil {
 		return 0
@@ -220,7 +215,7 @@ func (p *Playlist) GroupCount() int {
 	return count
 }
 
-const sqlSelectChannels = `SELECT pl.id, pl.channels_group, pl.channel, pl.source
+const cmdSelectChannels = `SELECT pl.id, pl.channels_group, pl.channel, pl.source
 FROM playlist AS pl 
 WHERE pl.channels_group = ?
 ORDER BY rowid
@@ -238,7 +233,7 @@ func (p *Playlist) Channels(group string) []*PlaylistItem {
 
 	items := make([]*PlaylistItem, 0)
 
-	stmt, err := p.db.Prepare(sqlSelectChannels)
+	stmt, err := p.db.Prepare(cmdSelectChannels)
 
 	if err != nil {
 		return items
@@ -270,7 +265,7 @@ func (p *Playlist) Channels(group string) []*PlaylistItem {
 	return items
 }
 
-const sqlInsertPlaylistItem = `INSERT INTO playlist (id, channels_group, channel, source)
+const cmdInsertPlaylistItem = `INSERT INTO playlist (id, channels_group, channel, source)
 	VALUES(?, ?, ?, ?)
 `
 
@@ -296,7 +291,7 @@ func (p *Playlist) AppendItem(item *PlaylistItem) (err error) {
 		return
 	}
 
-	stmt, err := tx.Prepare(sqlInsertPlaylistItem)
+	stmt, err := tx.Prepare(cmdInsertPlaylistItem)
 
 	if err != nil {
 		return
@@ -355,7 +350,7 @@ func (g *Guide) AppendChannel(c *XMLTVChannel) error {
 	return nil
 }
 
-const sqlAppendChannelDisplayName = `INSERT INTO channels(channel_id, display_name_lang, display_name) VALUES(?, ?, ?)`
+const cmdAppendChannelDisplayName = `INSERT INTO channels(channel_id, display_name_lang, display_name) VALUES(?, ?, ?)`
 
 func (g *Guide) appendChannelDisplayNames(cid string, d []*XMLTVChannelDisplayName, db *sql.DB) (err error) {
 
@@ -374,7 +369,7 @@ func (g *Guide) appendChannelDisplayNames(cid string, d []*XMLTVChannelDisplayNa
 		return
 	}
 
-	stmt, err := tx.Prepare(sqlAppendChannelDisplayName)
+	stmt, err := tx.Prepare(cmdAppendChannelDisplayName)
 
 	if err != nil {
 		return
@@ -389,7 +384,7 @@ func (g *Guide) appendChannelDisplayNames(cid string, d []*XMLTVChannelDisplayNa
 	return
 }
 
-const sqlAppendChannelURL = `INSERT INTO channels_urls(channel_id, url) VALUES(?, ?)`
+const cmdAppendChannelURL = `INSERT INTO channels_urls(channel_id, url) VALUES(?, ?)`
 
 func (g *Guide) appendChannelURL(cid string, urls []*XMLTVChannelURL, db *sql.DB) (err error) {
 
@@ -408,7 +403,7 @@ func (g *Guide) appendChannelURL(cid string, urls []*XMLTVChannelURL, db *sql.DB
 		return
 	}
 
-	stmt, err := tx.Prepare(sqlAppendChannelURL)
+	stmt, err := tx.Prepare(cmdAppendChannelURL)
 
 	if err != nil {
 		return
