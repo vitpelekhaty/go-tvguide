@@ -58,14 +58,14 @@ type XMLTVChannel struct {
 // XMLTVProgramme - details of the single programme transmission
 type XMLTVProgramme struct {
 	XMLName           xml.Name                         `xml:"programme"`
-	Channel           string                           `xml:"channel"`
-	Start             string                           `xml:"start"`
-	Stop              string                           `xml:"stop"`
-	PDCStart          string                           `xml:"pdc-start"`
-	VPSStart          string                           `xml:"vps-start"`
-	ShowView          string                           `xml:"showview"`
-	VideoPlus         string                           `xml:"videoplus"`
-	ClumpIdx          string                           `xml:"clumpidx"`
+	Channel           string                           `xml:"channel,attr"`
+	Start             string                           `xml:"start,attr"`
+	Stop              string                           `xml:"stop,attr"`
+	PDCStart          string                           `xml:"pdc-start,attr"`
+	VPSStart          string                           `xml:"vps-start,attr"`
+	ShowView          string                           `xml:"showview,attr"`
+	VideoPlus         string                           `xml:"videoplus,attr"`
+	ClumpIdx          string                           `xml:"clumpidx,attr"`
 	Title             []XMLTVProgrammeTitle            `xml:"title"`
 	SubTitle          []XMLTVProgrammeSubTitle         `xml:"sub-title"`
 	Desc              []XMLTVProgrammeDesc             `xml:"desc"`

@@ -64,7 +64,7 @@ func init() {
 		log.Fatal(err)
 	}
 
-	err = initDatabaseStructure(db)
+	err = createDatabaseStructure(db)
 
 	if err != nil {
 		log.Fatal(err)
@@ -83,164 +83,6 @@ func CurrentPlaylist() *Playlist {
 func CurrentGuide() *Guide {
 	return g
 }
-
-const (
-	cmdCreateTablePlaylist    = `CREATE TABLE playlist(id TEXT, channels_group TEXT, channel TEXT, source TEXT)`
-	cmdCreateIndexPlaylistCID = `CREATE INDEX ix_playlist_channel_id ON playlist(id)`
-
-	cmdCreateTableChannels          = `CREATE TABLE channels(cid INTEGER, channel_id TEXT)`
-	cmdCreateIndexChannelsCID       = `CREATE INDEX ix_channels_cid ON channels(cid)`
-	cmdCreateIndexChannelsChannelID = `CREATE INDEX ix_channels_channel_id ON channels(channel_id)`
-
-	cmdCreateTableChannelDisplayNames    = `CREATE TABLE channel_display_names(cid INTEGER, lang TEXT, display_name TEXT)`
-	cmdCreateIndexChannelDisplayNamesCID = `CREATE INDEX ix_channel_display_names_cid ON channel_display_names(cid)`
-
-	cmdCreateChannelURLTable    = `CREATE TABLE channels_urls(cid INTEGER, url TEXT)`
-	cmdCreateIndexChannelURLCID = `CREATE INDEX ix_channels_urls_cid ON channels_urls(cid)`
-
-	cmdCreateTableProgramme = `CREATE TABLE programme (
-	pid INTEGER,
-	channel_id TEXT,
-	start TEXT,
-	stop TEXT,
-	pdc_start TEXT,
-	vps_start TEXT,
-	show_view TEXT,
-	video_plus TEXT,
-	clump_idx TEXT		
-	)`
-
-	cmdCreateIndexProgrammePID       = `CREATE INDEX ix_programme_pid ON programme(pid)`
-	cmdCreateIndexProgrammeChannelID = `CREATE INDEX ix_programme_channel_id ON programme(channel_id)`
-
-	cmdCreateTableProgrammeTitles    = `CREATE TABLE programme_titles(pid INTEGER, lang TEXT, title TEXT)`
-	cmdCreateIndexProgrammeTitlesPID = `CREATE INDEX ix_programme_titles_pid ON programme_titles(pid)`
-
-	cmdCreateTableProgrammeSubTitle    = `CREATE TABLE programme_sub_titles(pid INTEGER, lang TEXT, sub_title TEXT)`
-	cmdCreateIndexProgrammeSubTitlePID = `CREATE INDEX ix_programme_sub_titles_pid ON programme_sub_titles(pid)`
-
-	cmdCreateTableProgrammeDesc    = `CREATE TABLE programme_desc(pid INTEGER, lang TEXT, desc TEXT)`
-	cmdCreateIndexProgrammeDescPID = `CREATE INDEX ix_programme_desc_pid ON programme_desc(pid)`
-
-	cmdCreateTableProgrammeDates    = `CREATE TABLE programme_dates(pid INTEGER, date TEXT)`
-	cmdCreateIndexProgrammeDatesPID = `CREATE INDEX ix_programme_dates_pid ON programme_dates(pid)`
-
-	cmdCreateTableProgrammeCategories    = `CREATE TABLE programme_categories(pid INTEGER, lang TEXT, category TEXT)`
-	cmdCreateIndexProgrammeCategoriesPID = `CREATE INDEX ix_programme_categories_pid ON programme_categories(pid)`
-
-	cmdCreateTableProgrammeKeywords    = `CREATE TABLE programme_keywords(pid INTEGER, lang TEXT, keyword TEXT)`
-	cmdCreateIndexProgrammeKeywordsPID = `CREATE INDEX ix_programme_keywords_pid ON programme_keywords(pid)`
-
-	cmdCreateTableProgrammeLanguage = `CREATE TABLE programme_languages(pid INTEGER, lang TEXT, language TEXT)`
-
-	cmdCreateTableProgrammeOriginalLanguage = `CREATE TABLE programme_original_languages(pid INTEGER, lang TEXT, language TEXT)`
-
-	cmdCreateTableProgrammeCountries = `CREATE TABLE programme_countries(pid INTEGER, lang TEXT, country TEXT)`
-
-	cmdCreateTableProgrammeDirectors = `CREATE TABLE programme_directors(pid INTEGER, director TEXT)`
-
-	cmdCreateTableProgrammeWriters = `CREATE TABLE programme_writers(pid INTEGER, writer TEXT)`
-
-	cmdCreateTableProgrammeAdapters = `CREATE TABLE programme_adapters(pid INTEGER, adapter TEXT)`
-
-	cmdCreateTableProgrammeProducers = `CREATE TABLE programme_producers(pid INTEGER, producer TEXT)`
-
-	cmdCreateTableProgrammeComposers = `CREATE TABLE programme_composers(pid INTEGER, composer TEXT)`
-
-	cmdCreateTableProgrammeEditors = `CREATE TABLE programme_editors(pid INTEGER, editor TEXT)`
-
-	cmdCreateTableProgrammePresenters = `CREATE TABLE programme_presenter(pid INTEGER, presenter TEXT)`
-
-	cmdCreateTableProgrammeCommentators = `CREATE TABLE programme_commentators(pid INTEGER, commentator TEXT)`
-
-	cmdCreateTableProgrammeGuests = `CREATE TABLE programme_guests(pid INTEGER, guest TEXT)`
-
-	cmdCreateTableProgrammeActors = `CREATE TABLE programme_actors(pid INTEGER, actor TEXT, role TEXT)`
-
-	cmdCreateTableProgrammeLength = `CREATE TABLE programme_length(pid INTEGER, value TEXT, units TEXT)`
-
-	cmdCreateTableProgrammeIcon = `CREATE TABLE programme_icon(pid INTEGER, src TEXT, width TEXT, height TEXT)`
-
-	cmdCreateTableProgrammeEpisodeNum = `CREATE TABLE programme_episode_num(pid INTEGER, system TEXT, episode_num TEXT)`
-
-	cmdCreateTableProgrammeVideo = `CREATE TABLE programme_video(pid INTEGER, present TEXT, colour TEXT, aspect TEXT, quality TEXT)`
-
-	cmdCreateTableProgrammeAudio = `CREATE TABLE programme_audio(pid INTEGER, present TEXT, stereo TEXT)`
-
-	cmdCreateTableProgrammePreviouslyShown = `CREATE TABLE programme_previously_shown(pid INTEGER, start TEXT, channel TEXT)`
-
-	cmdCreateTableProgrammePremiere = `CREATE TABLE programme_premiere(pid INTEGER, lang TEXT, premiere TEXT)`
-
-	cmdCreateTableProgrammeLastChance = `CREATE TABLE programme_last_chance(pid INTEGER, lang TEXT, last_chance TEXT)`
-)
-
-func initDatabaseStructure(db *sql.DB) (err error) {
-
-	objects := [45]string{cmdCreateTablePlaylist, cmdCreateIndexPlaylistCID,
-		cmdCreateTableChannels, cmdCreateIndexChannelsCID, cmdCreateIndexChannelsChannelID,
-		cmdCreateTableChannelDisplayNames, cmdCreateIndexChannelDisplayNamesCID,
-		cmdCreateChannelURLTable, cmdCreateIndexChannelURLCID,
-		cmdCreateTableProgramme, cmdCreateIndexProgrammePID, cmdCreateIndexProgrammeChannelID,
-		cmdCreateTableProgrammeTitles, cmdCreateIndexProgrammeTitlesPID,
-		cmdCreateTableProgrammeSubTitle, cmdCreateIndexProgrammeSubTitlePID,
-		cmdCreateTableProgrammeDesc, cmdCreateIndexProgrammeDescPID,
-		cmdCreateTableProgrammeDates, cmdCreateIndexProgrammeDatesPID,
-		cmdCreateTableProgrammeCategories, cmdCreateIndexProgrammeCategoriesPID,
-		cmdCreateTableProgrammeKeywords, cmdCreateIndexProgrammeKeywordsPID,
-		cmdCreateTableProgrammeLanguage,
-		cmdCreateTableProgrammeOriginalLanguage,
-		cmdCreateTableProgrammeCountries,
-		cmdCreateTableProgrammeDirectors,
-		cmdCreateTableProgrammeWriters,
-		cmdCreateTableProgrammeAdapters,
-		cmdCreateTableProgrammeProducers,
-		cmdCreateTableProgrammeComposers,
-		cmdCreateTableProgrammeEditors,
-		cmdCreateTableProgrammePresenters,
-		cmdCreateTableProgrammeCommentators,
-		cmdCreateTableProgrammeGuests,
-		cmdCreateTableProgrammeActors,
-		cmdCreateTableProgrammeLength,
-		cmdCreateTableProgrammeIcon,
-		cmdCreateTableProgrammeEpisodeNum,
-		cmdCreateTableProgrammeVideo,
-		cmdCreateTableProgrammeAudio,
-		cmdCreateTableProgrammePreviouslyShown,
-		cmdCreateTableProgrammePremiere,
-		cmdCreateTableProgrammeLastChance}
-
-	for _, dbobj := range objects {
-		err = execsql(dbobj, db)
-
-		if err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-func execsql(cmd string, db *sql.DB) error {
-
-	stmt, err := db.Prepare(cmd)
-
-	if err != nil {
-		return err
-	}
-
-	_, err = stmt.Exec()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-const cmdSelectGroups = `SELECT pl.channels_group FROM playlist AS pl
-GROUP BY pl.channels_group
-ORDER BY rowid
-`
 
 // Groups returns existing groups in the playlist
 func (p *Playlist) Groups() []string {
@@ -281,12 +123,6 @@ func (p *Playlist) Groups() []string {
 	return g
 }
 
-const cmdSelectGroupCount = `SELECT COUNT(*) AS cc FROM (
-	SELECT pl.channels_group FROM playlist AS pl
-	GROUP BY pl.channels_group
-) AS items
-`
-
 // GroupCount returns number of groups in the playlist
 func (p *Playlist) GroupCount() int {
 
@@ -308,12 +144,6 @@ func (p *Playlist) GroupCount() int {
 
 	return count
 }
-
-const cmdSelectChannels = `SELECT pl.id, pl.channels_group, pl.channel, pl.source
-FROM playlist AS pl 
-WHERE pl.channels_group = ?
-ORDER BY rowid
-`
 
 // Channels returns names of channels for the specified group
 func (p *Playlist) Channels(group string) []*PlaylistItem {
@@ -358,8 +188,6 @@ func (p *Playlist) Channels(group string) []*PlaylistItem {
 
 	return items
 }
-
-const cmdInsertPlaylistItem = `INSERT INTO playlist (id, channels_group, channel, source) VALUES(?, ?, ?, ?)`
 
 // AppendItem appends the item of the playlist into the collection
 func (p *Playlist) AppendItem(item *PlaylistItem) (err error) {
@@ -409,11 +237,6 @@ func (p *Playlist) Group(index int) (string, error) {
 
 	return "", fmt.Errorf("Index (%d) out of bounds", index)
 }
-
-const (
-	cmdAppendGuideChannel   = `INSERT INTO channels(channel_id) VALUES(?)`
-	cmdUpdateGuideChannelID = `UPDATE channels SET cid = ? WHERE rowid = ?`
-)
 
 // AppendChannel appends info about channel into collection
 func (g *Guide) AppendChannel(c *XMLTVChannel) (err error) {
@@ -488,8 +311,6 @@ func (g *Guide) AppendChannel(c *XMLTVChannel) (err error) {
 	return nil
 }
 
-const cmdAppendChannelDisplayName = `INSERT INTO channel_display_names(cid, lang, display_name) VALUES(?, ?, ?)`
-
 func (g *Guide) appendChannelDisplayNames(cid int64, d []*XMLTVChannelDisplayName, tx *sql.Tx) (err error) {
 
 	stmt, err := tx.Prepare(cmdAppendChannelDisplayName)
@@ -506,8 +327,6 @@ func (g *Guide) appendChannelDisplayNames(cid int64, d []*XMLTVChannelDisplayNam
 
 	return
 }
-
-const cmdAppendChannelURL = `INSERT INTO channels_urls(cid, url) VALUES(?, ?)`
 
 func (g *Guide) appendChannelURL(cid int64, urls []*XMLTVChannelURL, tx *sql.Tx) (err error) {
 
@@ -529,7 +348,7 @@ func (g *Guide) appendChannelURL(cid int64, urls []*XMLTVChannelURL, tx *sql.Tx)
 // Clear clean tv guide collection
 func (g *Guide) Clear() (err error) {
 
-	tables := [2]string{"channels", "channels_urls"}
+	commands := [2]string{cmdDeleteFromChannels, cmdDeleteFromChannelsURL}
 
 	tx, err := g.db.Begin()
 
@@ -546,19 +365,80 @@ func (g *Guide) Clear() (err error) {
 		return
 	}
 
-	stmt, err := tx.Prepare(`DELETE FROM ?`)
+	for _, command := range commands {
+		stmt, err := tx.Prepare(command)
+
+		if err != nil {
+			return err
+		}
+
+		if _, err = stmt.Exec(&command); err != nil {
+			return err
+		}
+	}
+
+	return
+}
+
+// AppendProgramme appends info about programme into collection
+func (g *Guide) AppendProgramme(p *XMLTVProgramme) (err error) {
+
+	if p == nil {
+		return errors.New("Guide.AppendProgramme: cannot append an empty programme")
+	}
+
+	tx, err := g.db.Begin()
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+
+		tx.Commit()
+	}()
+
+	_, err = g.appendProgramme(p, tx)
 
 	if err != nil {
 		return
 	}
 
-	for _, table := range tables {
-		if _, err = stmt.Exec(&table); err != nil {
-			return
-		}
+	return
+}
+
+func (g *Guide) appendProgramme(p *XMLTVProgramme, tx *sql.Tx) (int64, error) {
+
+	var pid int64 = -1
+
+	cs, err := tx.Prepare(cmdAppendGuideProgramme)
+
+	if err != nil {
+		return pid, err
 	}
 
-	return
+	res, err := cs.Exec(&p.Channel, &p.Start, &p.Stop, &p.PDCStart, &p.VPSStart,
+		&p.ShowView, &p.VideoPlus, &p.ClumpIdx)
+
+	if err != nil {
+		return pid, err
+	}
+
+	pid, err = res.LastInsertId()
+
+	if err != nil {
+		return pid, err
+	}
+
+	us, err := tx.Prepare(cmdUpdateGuideProgrammePID)
+
+	if err != nil {
+		return pid, err
+	}
+
+	_, err = us.Exec(&pid, &pid)
+
+	return pid, err
 }
 
 // PlaylistParser return the parser fo appropriate playlist format

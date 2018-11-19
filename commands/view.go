@@ -86,7 +86,14 @@ var cmdView = &cobra.Command{
 			}
 		}
 
+		fprogramme := func(p *pl.XMLTVProgramme) {
+			if err := guide.AppendProgramme(p); err != nil {
+				log.Fatal(err)
+			}
+		}
+
 		gparser.OnChannel = fchannel
+		gparser.OnProgramme = fprogramme
 
 		err = gparser.Parse(data)
 
