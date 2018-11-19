@@ -32,7 +32,7 @@ func getPlaylistDatabaseName() string {
 	dir, _ := osext.ExecutableFolder()
 	filename = path.Join(dir, "playlist.db3")
 
-	if _, err := os.Stat(filename); err == os.ErrExist {
+	if _, err := os.Stat(filename); err != os.ErrNotExist {
 		os.Remove(filename)
 	}
 

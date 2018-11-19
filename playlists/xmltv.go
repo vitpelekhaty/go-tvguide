@@ -19,7 +19,6 @@ package playlists
 import (
 	"bytes"
 	"encoding/xml"
-	"io"
 )
 
 // Description of XMLTV guide format
@@ -330,10 +329,10 @@ func (parser *XMLTVParser) parseHeader(data []byte) (err error) {
 	var token xml.Token
 
 	for {
-		token, err = decoder.Token()
+		token, _ = decoder.Token()
 
-		if token == nil || (err != nil && err != io.EOF) {
-			return err
+		if token == nil {
+			return
 		}
 
 		switch elem := token.(type) {
@@ -345,7 +344,12 @@ func (parser *XMLTVParser) parseHeader(data []byte) (err error) {
 
 				var h XMLTVHead
 
-				_ = decoder.DecodeElement(&h, &elem)
+				err = decoder.DecodeElement(&h, &elem)
+
+				if err != nil {
+					return
+				}
+
 				parser.doHead(&h)
 			}
 
@@ -363,10 +367,10 @@ func (parser *XMLTVParser) parseTVListing(data []byte) (err error) {
 	var token xml.Token
 
 	for {
-		token, err = decoder.Token()
+		token, _ = decoder.Token()
 
-		if token == nil || (err != nil && err != io.EOF) {
-			return err
+		if token == nil {
+			return
 		}
 
 		switch elem := token.(type) {
@@ -380,14 +384,24 @@ func (parser *XMLTVParser) parseTVListing(data []byte) (err error) {
 
 				var c XMLTVChannel
 
-				_ = decoder.DecodeElement(&c, &elem)
+				err = decoder.DecodeElement(&c, &elem)
+
+				if err != nil {
+					return
+				}
+
 				parser.doChannel(&c)
 
 			case "programme":
 
 				var p XMLTVProgramme
 
-				_ = decoder.DecodeElement(&p, &elem)
+				err = decoder.DecodeElement(&p, &elem)
+
+				if err != nil {
+					return
+				}
+
 				parser.doProgramme(&p)
 
 			}
