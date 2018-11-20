@@ -32,11 +32,13 @@ type M3UPlaylistParser struct {
 // Parse parses the data of a playlist
 func (parser *M3UPlaylistParser) Parse(data []byte) error {
 
-	fitem := func(item *PlaylistItem) {
+	fitem := func(item *PlaylistItem) error {
 
 		if item != nil {
 			parser.items = append(parser.items, item)
 		}
+
+		return nil
 	}
 
 	return parser.AsyncParse(data, fitem)
@@ -90,7 +92,9 @@ func (parser *M3UPlaylistParser) AsyncParse(data []byte, onItem OnPlaylistItemEv
 					item := &PlaylistItem{Name: name, GroupTitle: group, URL: source, ID: id}
 
 					if onItem != nil {
-						onItem(item)
+						if err := onItem(item); err != nil {
+							return err
+						}
 					}
 				}
 			}

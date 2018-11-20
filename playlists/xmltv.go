@@ -270,13 +270,13 @@ type XMLTVProgrammeReview struct {
 }
 
 // OnHeadEvent an event that fires when guide header is read
-type OnHeadEvent func(h *XMLTVHead)
+type OnHeadEvent func(h *XMLTVHead) error
 
 // OnChannelEvent an event that fires when channel info is read
-type OnChannelEvent func(ch *XMLTVChannel)
+type OnChannelEvent func(ch *XMLTVChannel) error
 
 // OnProgrammeEvent an event that fires when programme info is read
-type OnProgrammeEvent func(p *XMLTVProgramme)
+type OnProgrammeEvent func(p *XMLTVProgramme) error
 
 // XMLTVParser is parser of tv guide with xmltv format (github.com/xmltv)
 type XMLTVParser struct {
@@ -285,25 +285,31 @@ type XMLTVParser struct {
 	OnProgramme OnProgrammeEvent
 }
 
-func (parser *XMLTVParser) doHead(h *XMLTVHead) {
+func (parser *XMLTVParser) doHead(h *XMLTVHead) error {
 
 	if parser.OnHead != nil {
-		parser.OnHead(h)
+		return parser.OnHead(h)
 	}
+
+	return nil
 }
 
-func (parser *XMLTVParser) doChannel(ch *XMLTVChannel) {
+func (parser *XMLTVParser) doChannel(ch *XMLTVChannel) error {
 
 	if parser.OnChannel != nil {
-		parser.OnChannel(ch)
+		return parser.OnChannel(ch)
 	}
+
+	return nil
 }
 
-func (parser *XMLTVParser) doProgramme(p *XMLTVProgramme) {
+func (parser *XMLTVParser) doProgramme(p *XMLTVProgramme) error {
 
 	if parser.OnProgramme != nil {
-		parser.OnProgramme(p)
+		return parser.OnProgramme(p)
 	}
+
+	return nil
 }
 
 // Parse parses XMLTV guide data
@@ -350,7 +356,11 @@ func (parser *XMLTVParser) parseHeader(data []byte) (err error) {
 					return
 				}
 
-				parser.doHead(&h)
+				err = parser.doHead(&h)
+
+				if err != nil {
+					return
+				}
 			}
 
 		default:
@@ -390,7 +400,11 @@ func (parser *XMLTVParser) parseTVListing(data []byte) (err error) {
 					return
 				}
 
-				parser.doChannel(&c)
+				err = parser.doChannel(&c)
+
+				if err != nil {
+					return
+				}
 
 			case "programme":
 
@@ -402,7 +416,11 @@ func (parser *XMLTVParser) parseTVListing(data []byte) (err error) {
 					return
 				}
 
-				parser.doProgramme(&p)
+				err = parser.doProgramme(&p)
+
+				if err != nil {
+					return
+				}
 
 			}
 

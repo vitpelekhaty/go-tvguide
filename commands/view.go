@@ -19,7 +19,6 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/jroimartin/gocui"
 
@@ -57,13 +56,7 @@ var cmdView = &cobra.Command{
 		playlist := pl.CurrentPlaylist()
 		guide := pl.CurrentGuide()
 
-		fitem := func(item *pl.PlaylistItem) {
-			if err := playlist.AppendItem(item); err != nil {
-				log.Fatal(err)
-			}
-		}
-
-		err = parser.AsyncParse(data, fitem)
+		err = playlist.Read(data, parser)
 
 		if err != nil {
 			return err
@@ -79,23 +72,7 @@ var cmdView = &cobra.Command{
 		}
 
 		gparser := &pl.XMLTVParser{}
-
-		fchannel := func(ch *pl.XMLTVChannel) {
-			if err := guide.AppendChannel(ch); err != nil {
-				log.Fatal(err)
-			}
-		}
-
-		fprogramme := func(p *pl.XMLTVProgramme) {
-			if err := guide.AppendProgramme(p); err != nil {
-				log.Fatal(err)
-			}
-		}
-
-		gparser.OnChannel = fchannel
-		gparser.OnProgramme = fprogramme
-
-		err = gparser.Parse(data)
+		err = guide.Read(data, gparser)
 
 		if err != nil {
 			return err

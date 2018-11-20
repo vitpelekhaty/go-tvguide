@@ -36,7 +36,9 @@ type PlaylistItem struct {
 
 // Playlist content
 type Playlist struct {
-	db *sql.DB
+	db                     *sql.DB
+	tx                     *sql.Tx
+	stmtInsertPlaylistItem *sql.Stmt
 }
 
 // GuideItem contains info about tv programme
@@ -45,7 +47,14 @@ type GuideItem struct {
 
 // Guide content
 type Guide struct {
-	db *sql.DB
+	db                           *sql.DB
+	tx                           *sql.Tx
+	stmtAppendGuideChannel       *sql.Stmt
+	stmtUpdateGuideChannelID     *sql.Stmt
+	stmtAppendChannelDisplayName *sql.Stmt
+	stmtAppendChannelURL         *sql.Stmt
+	stmtAppendGuideProgramme     *sql.Stmt
+	stmtUpdateGuideProgrammePID  *sql.Stmt
 }
 
 var (
@@ -82,6 +91,40 @@ func CurrentPlaylist() *Playlist {
 // CurrentGuide returns guide object
 func CurrentGuide() *Guide {
 	return g
+}
+
+// Read reads content of the playlist
+func (p *Playlist) Read(data []byte, parser IPlaylistParser) (err error) {
+
+	tx, err := p.db.Begin()
+
+	if err != nil {
+		return
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+
+		tx.Commit()
+	}()
+
+	p.tx = tx
+	p.stmtInsertPlaylistItem, err = tx.Prepare(cmdInsertPlaylistItem)
+
+	if err != nil {
+		return
+	}
+
+	callback := func(item *PlaylistItem) error {
+		return p.appendItem(item)
+	}
+
+	err = parser.AsyncParse(data, callback)
+
+	return
 }
 
 // Groups returns existing groups in the playlist
@@ -189,35 +232,13 @@ func (p *Playlist) Channels(group string) []*PlaylistItem {
 	return items
 }
 
-// AppendItem appends the item of the playlist into the collection
-func (p *Playlist) AppendItem(item *PlaylistItem) (err error) {
+func (p *Playlist) appendItem(item *PlaylistItem) (err error) {
 
 	if item == nil {
 		return errors.New("Playlist.AppendItem: cannot append an empty item")
 	}
 
-	tx, err := p.db.Begin()
-
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-
-		tx.Commit()
-	}()
-
-	if err != nil {
-		return
-	}
-
-	stmt, err := tx.Prepare(cmdInsertPlaylistItem)
-
-	if err != nil {
-		return
-	}
-
-	_, err = stmt.Exec(&item.ID, &item.GroupTitle, &item.Name, &item.URL)
+	_, err = p.stmtInsertPlaylistItem.Exec(&item.ID, &item.GroupTitle, &item.Name, &item.URL)
 
 	if err != nil {
 		return
@@ -238,16 +259,24 @@ func (p *Playlist) Group(index int) (string, error) {
 	return "", fmt.Errorf("Index (%d) out of bounds", index)
 }
 
-// AppendChannel appends info about channel into collection
-func (g *Guide) AppendChannel(c *XMLTVChannel) (err error) {
+// Read reads content of the tv guide
+func (g *Guide) Read(data []byte, parser *XMLTVParser) (err error) {
 
-	if c == nil {
-		return errors.New("Guide.AppendChannel: cannot append an empty channel")
-	}
+	onHead := parser.OnHead
+	onChannel := parser.OnChannel
+	onProgramme := parser.OnProgramme
 
-	var cid int64
+	defer func() {
+		parser.OnHead = onHead
+		parser.OnChannel = onChannel
+		parser.OnProgramme = onProgramme
+	}()
 
 	tx, err := g.db.Begin()
+
+	if err != nil {
+		return
+	}
 
 	defer func() {
 		if err != nil {
@@ -258,11 +287,67 @@ func (g *Guide) AppendChannel(c *XMLTVChannel) (err error) {
 		tx.Commit()
 	}()
 
-	cs, err := tx.Prepare(cmdAppendGuideChannel)
+	g.tx = tx
+
+	g.stmtAppendGuideChannel, err = tx.Prepare(cmdAppendGuideChannel)
 
 	if err != nil {
 		return
 	}
+
+	g.stmtUpdateGuideChannelID, err = tx.Prepare(cmdUpdateGuideChannelID)
+
+	if err != nil {
+		return
+	}
+
+	g.stmtAppendChannelDisplayName, err = tx.Prepare(cmdAppendChannelDisplayName)
+
+	if err != nil {
+		return
+	}
+
+	g.stmtAppendChannelURL, err = tx.Prepare(cmdAppendChannelURL)
+
+	if err != nil {
+		return
+	}
+
+	g.stmtAppendGuideProgramme, err = tx.Prepare(cmdAppendGuideProgramme)
+
+	if err != nil {
+		return
+	}
+
+	g.stmtUpdateGuideProgrammePID, err = tx.Prepare(cmdUpdateGuideProgrammePID)
+
+	if err != nil {
+		return
+	}
+
+	parser.OnChannel = func(ch *XMLTVChannel) error {
+		return g.appendChannel(ch)
+	}
+
+	parser.OnProgramme = func(p *XMLTVProgramme) error {
+		return g.appendProgramme(p)
+	}
+
+	err = parser.Parse(data)
+
+	return
+}
+
+func (g *Guide) appendChannel(c *XMLTVChannel) (err error) {
+
+	if c == nil {
+		return errors.New("Guide.AppendChannel: cannot append an empty channel")
+	}
+
+	var cid int64
+
+	cs := g.stmtAppendGuideChannel
+	us := g.stmtUpdateGuideChannelID
 
 	res, err := cs.Exec(&c.ID)
 
@@ -271,12 +356,6 @@ func (g *Guide) AppendChannel(c *XMLTVChannel) (err error) {
 	}
 
 	cid, err = res.LastInsertId()
-
-	if err != nil {
-		return
-	}
-
-	us, err := tx.Prepare(cmdUpdateGuideChannelID)
 
 	if err != nil {
 		return
@@ -294,7 +373,7 @@ func (g *Guide) AppendChannel(c *XMLTVChannel) (err error) {
 		dn[index] = &d
 	}
 
-	if err := g.appendChannelDisplayNames(cid, dn, tx); err != nil {
+	if err := g.appendChannelDisplayNames(cid, dn); err != nil {
 		return err
 	}
 
@@ -304,23 +383,17 @@ func (g *Guide) AppendChannel(c *XMLTVChannel) (err error) {
 		urls[index] = &url
 	}
 
-	if err := g.appendChannelURL(cid, urls, tx); err != nil {
+	if err := g.appendChannelURL(cid, urls); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (g *Guide) appendChannelDisplayNames(cid int64, d []*XMLTVChannelDisplayName, tx *sql.Tx) (err error) {
-
-	stmt, err := tx.Prepare(cmdAppendChannelDisplayName)
-
-	if err != nil {
-		return
-	}
+func (g *Guide) appendChannelDisplayNames(cid int64, d []*XMLTVChannelDisplayName) (err error) {
 
 	for _, dn := range d {
-		if _, err := stmt.Exec(&cid, &dn.Lang, &dn.Value); err != nil {
+		if _, err := g.stmtAppendChannelDisplayName.Exec(&cid, &dn.Lang, &dn.Value); err != nil {
 			return err
 		}
 	}
@@ -328,16 +401,10 @@ func (g *Guide) appendChannelDisplayNames(cid int64, d []*XMLTVChannelDisplayNam
 	return
 }
 
-func (g *Guide) appendChannelURL(cid int64, urls []*XMLTVChannelURL, tx *sql.Tx) (err error) {
-
-	stmt, err := tx.Prepare(cmdAppendChannelURL)
-
-	if err != nil {
-		return
-	}
+func (g *Guide) appendChannelURL(cid int64, urls []*XMLTVChannelURL) (err error) {
 
 	for _, url := range urls {
-		if _, err = stmt.Exec(&cid, &url.Value); err != nil {
+		if _, err = g.stmtAppendChannelURL.Exec(&cid, &url.Value); err != nil {
 			return
 		}
 	}
@@ -380,25 +447,9 @@ func (g *Guide) Clear() (err error) {
 	return
 }
 
-// AppendProgramme appends info about programme into collection
-func (g *Guide) AppendProgramme(p *XMLTVProgramme) (err error) {
+func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 
-	if p == nil {
-		return errors.New("Guide.AppendProgramme: cannot append an empty programme")
-	}
-
-	tx, err := g.db.Begin()
-
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-
-		tx.Commit()
-	}()
-
-	_, err = g.appendProgramme(p, tx)
+	_, err = g.appendProgrammeRecord(p, g.tx)
 
 	if err != nil {
 		return
@@ -407,15 +458,12 @@ func (g *Guide) AppendProgramme(p *XMLTVProgramme) (err error) {
 	return
 }
 
-func (g *Guide) appendProgramme(p *XMLTVProgramme, tx *sql.Tx) (int64, error) {
+func (g *Guide) appendProgrammeRecord(p *XMLTVProgramme, tx *sql.Tx) (int64, error) {
 
 	var pid int64 = -1
 
-	cs, err := tx.Prepare(cmdAppendGuideProgramme)
-
-	if err != nil {
-		return pid, err
-	}
+	cs := g.stmtAppendGuideProgramme
+	us := g.stmtUpdateGuideProgrammePID
 
 	res, err := cs.Exec(&p.Channel, &p.Start, &p.Stop, &p.PDCStart, &p.VPSStart,
 		&p.ShowView, &p.VideoPlus, &p.ClumpIdx)
@@ -425,12 +473,6 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme, tx *sql.Tx) (int64, error) {
 	}
 
 	pid, err = res.LastInsertId()
-
-	if err != nil {
-		return pid, err
-	}
-
-	us, err := tx.Prepare(cmdUpdateGuideProgrammePID)
 
 	if err != nil {
 		return pid, err
