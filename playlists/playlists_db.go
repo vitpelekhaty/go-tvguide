@@ -18,6 +18,10 @@ package playlists
 
 import (
 	"database/sql"
+	"log"
+
+	// append sqlite3 support for database/sql
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -163,12 +167,39 @@ const (
 	cmdAppendGuideProgramme = `INSERT INTO programme(channel_id, start, stop, pdc_start,
 	vps_start, show_view, video_plus, clump_idx) VALUES(?, ?, ?, ?, ?, ?, ?, ?)`
 	cmdUpdateGuideProgrammePID = `UPDATE programme SET pid = ? where rowid = ?`
+
+	cmdAppendProgrammeTitle = `INSERT INTO programme_titles(pid, lang, title) VALUES(?, ?, ?)`
 )
 
 const (
 	cmdDeleteFromChannels    = `DELETE FROM channels`
 	cmdDeleteFromChannelsURL = `DELETE FROM channel_urls`
 )
+
+var db *sql.DB
+var dbname = getPlaylistDatabaseName()
+
+func init() {
+
+	var err error
+
+	db, err = sql.Open("sqlite3", dbname)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = createDatabaseStructure(db)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	/*
+		pl = &Playlist{db: db}
+		g = &Guide{db: db}
+	*/
+}
 
 func createDatabaseStructure(db *sql.DB) (err error) {
 
