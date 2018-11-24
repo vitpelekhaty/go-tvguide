@@ -75,15 +75,15 @@ type XMLTVProgramme struct {
 	Keywords          []XMLTVProgrammeKeyword          `xml:"keyword"`
 	Languages         []XMLTVProgrammeLanguage         `xml:"language"`
 	OriginalLanguages []XMLTVProgrammeOriginalLanguage `xml:"orig-language"`
-	Length            XMLTVProgrammeLength             `xml:"length"`
-	Icon              XMLTVProgrammeIcon               `xml:"icon"`
+	Length            []XMLTVProgrammeLength           `xml:"length"`
+	Icon              []XMLTVProgrammeIcon             `xml:"icon"`
 	Country           []XMLTVProgrammeCountry          `xml:"country"`
-	EpisodeNum        XMLTVProgrammeEpisodeNum         `xml:"episode-num"`
-	Video             XMLTVProgrammeVideo              `xml:"video"`
-	Audio             XMLTVProgrammeAudio              `xml:"audio"`
-	PreviouslyShown   XMLTVProgrammePreviouslyShown    `xml:"previously-shown"`
-	Premiere          XMLTVProgrammePremiere           `xml:"premiere"`
-	LastChance        XMLTVProgrammmeLastChance        `xml:"last-chance"`
+	EpisodeNum        []XMLTVProgrammeEpisodeNum       `xml:"episode-num"`
+	Video             []XMLTVProgrammeVideo            `xml:"video"`
+	Audio             []XMLTVProgrammeAudio            `xml:"audio"`
+	PreviouslyShown   []XMLTVProgrammePreviouslyShown  `xml:"previously-shown"`
+	Premiere          []XMLTVProgrammePremiere         `xml:"premiere"`
+	LastChance        []XMLTVProgrammmeLastChance      `xml:"last-chance"`
 	Subtitles         []XMLTVProgrammeSubtitles        `xml:"subtitles"`
 	Rating            []XMLTVProgrammeRating           `xml:"rating"`
 	StarRating        []XMLTVProgrammeStarRating       `xml:"star-rating"`

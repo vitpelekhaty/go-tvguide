@@ -133,6 +133,21 @@ const (
 
 	cmdCreateTableProgrammeLastChance    = `CREATE TABLE programme_last_chance(pid INTEGER, lang TEXT, last_chance TEXT)`
 	cmdCreateIndexProgrammeLastChancePID = `CREATE INDEX ix_programme_last_chance_pid ON programme_last_chance(pid)`
+
+	cmdCreateTableProgrammeSubtitles     = `CREATE TABLE programme_subtitles(pid INTEGER, type TEXT, lang TEXT, language TEXT)`
+	cmdCreateIndexProgrammeSubtitlesPID  = `CREATE INDEX ix_programme_subtitles_pid ON programme_subtitles(pid)`
+	cmdCreateIndexProgrammeSubtitlesType = `CREATE INDEX ix_programme_subtitles_type ON programme_subtitles(type, pid)`
+
+	cmdCreateTableProgrammeRating       = `CREATE TABLE programme_rating(pid INTEGER, system TEXT, value TEXT, src TEXT, width TEXT, height TEXT)`
+	cmdCreateIndexProgrammeRatingPID    = `CREATE INDEX ix_programme_rating_pid ON programme_rating(pid)`
+	cmdCreateIndexProgrammeRatingSystem = `CREATE INDEX ix_programme_rating_system ON programme_rating(system, pid)`
+
+	cmdCreateTableProgrammeStarRating       = `CREATE TABLE programme_star_rating(pid INTEGER, system TEXT, value TEXT, src TEXT, width TEXT, height TEXT)`
+	cmdCreateIndexProgrammeStarRatingPID    = `CREATE INDEX ix_programme_star_rating_pid ON programme_star_rating(pid)`
+	cmdCreateIndexProgrammeStarRatingSystem = `CREATE INDEX ix_programme_star_rating_system ON programme_star_rating(system, pid)`
+
+	cmdCreateTableProgrammeReview    = `CREATE TABLE programme_review(pid INTEGER, type TEXT, source TEXT, reviewer TEXT, lang TEXT, value TEXT)`
+	cmdCreateIndexProgrammeReviewPID = `CREATE INDEX ix_programme_review_pid ON programme_review(pid)`
 )
 
 const (
@@ -159,8 +174,7 @@ const (
 
 	cmdAppendChannelDisplayName = `INSERT INTO channel_display_names(cid, lang, display_name) VALUES(?, ?, ?)`
 
-	cmdAppendChannelURL = `INSERT INTO channel_urls(cid, url) VALUES(?, ?)`
-
+	cmdAppendChannelURL     = `INSERT INTO channel_urls(cid, url) VALUES(?, ?)`
 	cmdAppendGuideChannel   = `INSERT INTO channels(channel_id) VALUES(?)`
 	cmdUpdateGuideChannelID = `UPDATE channels SET cid = ? WHERE rowid = ?`
 
@@ -168,7 +182,37 @@ const (
 	vps_start, show_view, video_plus, clump_idx) VALUES(?, ?, ?, ?, ?, ?, ?, ?)`
 	cmdUpdateGuideProgrammePID = `UPDATE programme SET pid = ? where rowid = ?`
 
-	cmdAppendProgrammeTitle = `INSERT INTO programme_titles(pid, lang, title) VALUES(?, ?, ?)`
+	cmdAppendProgrammeTitle            = `INSERT INTO programme_titles(pid, lang, title) VALUES(?, ?, ?)`
+	cmdAppendProgrammeSubTitle         = `INSERT INTO programme_sub_titles(pid, lang, sub_title) VALUES(?, ?, ?)`
+	cmdAppendProgrammeDesc             = `INSERT INTO programme_desc(pid, lang, desc) VALUES(?, ?, ?)`
+	cmdAppendProgrammeDates            = `INSERT INTO programme_dates(pid, date) VALUES(?, ?)`
+	cmdAppendProgrammeCategories       = `INSERT INTO programme_categories(pid, lang, category) VALUES(?, ?, ?)`
+	cmdAppendProgrammeKeywords         = `INSERT INTO programme_keywords(pid, lang, keyword) VALUES(?, ?, ?)`
+	cmdAppendProgrammeLanguage         = `INSERT INTO programme_languages(pid, lang, language) VALUES(?, ?, ?)`
+	cmdAppendProgrammeOriginalLanguage = `INSERT INTO programme_original_languages(pid, lang, language) VALUES(?, ?, ?)`
+	cmdAppendProgrammeCountries        = `INSERT INTO programme_countries(pid, lang, country) VALUES(?, ?, ?)`
+	cmdAppendProgrammeDirectors        = `INSERT INTO programme_directors(pid, director) VALUES(?, ?)`
+	cmdAppendProgrammeWriters          = `INSERT INTO programme_writers(pid, writer) VALUES(?, ?)`
+	cmdAppendProgrammeAdapters         = `INSERT INTO programme_adapters(pid, adapter) VALUES(?, ?)`
+	cmdAppendProgrammeProducers        = `INSERT INTO programme_producers(pid, producer) VALUES(?, ?)`
+	cmdAppendProgrammeComposers        = `INSERT INTO programme_composers(pid, composer) VALUES(?, ?)`
+	cmdAppendProgrammeEditors          = `INSERT INTO programme_editors(pid, editor) VALUES(?, ?)`
+	cmdAppendProgrammePresenters       = `INSERT INTO programme_presenters(pid, presenter) VALUES(?, ?)`
+	cmdAppendProgrammeCommentators     = `INSERT INTO programme_commentators(pid, commentator) VALUES(?, ?)`
+	cmdAppendProgrammeGuests           = `INSERT INTO programme_guests(pid, guest) VALUES(?, ?)`
+	cmdAppendProgrammeActors           = `INSERT INTO programme_actors(pid, actor, role) VALUES(?, ?, ?)`
+	cmdAppendProgrammeLength           = `INSERT INTO programme_length(pid, value, units) VALUES(?, ?, ?)`
+	cmdAppendProgrammeIcon             = `INSERT INTO programme_icon(pid, src, width, height) VALUES(?, ?, ?, ?)`
+	cmdAppendProgrammeEpisodeNum       = `INSERT INTO programme_episode_num(pid, system, episode_num) VALUES(?, ?, ?)`
+	cmdAppendProgrammeVideo            = `INSERT INTO programme_video(pid, present, colour, aspect, quality) VALUES(?, ?, ?, ?, ?)`
+	cmdAppendProgrammeAudio            = `INSERT INTO programme_audio(pid, present, stereo) VALUES(?, ?, ?)`
+	cmdAppendProgrammePreviouslyShown  = `INSERT INTO programme_previously_shown(pid, start, channel) VALUES(?, ?, ?)`
+	cmdAppendProgrammePremiere         = `INSERT INTO programme_premiere(pid, lang, premiere) VALUES(?, ?, ?)`
+	cmdAppendProgrammeLastChance       = `INSERT INTO programme_last_chance(pid, lang, last_chance) VALUES(?, ?, ?)`
+	cmdAppendProgrammeSubtitles        = `INSERT INTO programme_subtitles(pid, type, lang, language) VALUES(?, ?, ?, ?)`
+	cmdAppendProgrammeRating           = `INSERT INTO programme_rating(pid, system, value, src, width, height) VALUES(?, ?, ?, ?, ?, ?)`
+	cmdAppendProgrammeStarRating       = `INSERT INTO programme_star_rating(pid, system, value, src, width, height) VALUES(?, ?, ?, ?, ?, ?)`
+	cmdAppendProgrammeReview           = `INSERT INTO programme_review(pid, type, source, reviewer, lang, value) VALUES(?, ?, ?, ?, ?, ?)`
 )
 
 const (
@@ -194,16 +238,11 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	/*
-		pl = &Playlist{db: db}
-		g = &Guide{db: db}
-	*/
 }
 
 func createDatabaseStructure(db *sql.DB) (err error) {
 
-	objects := [66]string{cmdCreateTablePlaylist, cmdCreateIndexPlaylistCID,
+	objects := [77]string{cmdCreateTablePlaylist, cmdCreateIndexPlaylistCID,
 		cmdCreateTableChannels, cmdCreateIndexChannelsCID, cmdCreateIndexChannelsChannelID,
 		cmdCreateTableChannelDisplayNames, cmdCreateIndexChannelDisplayNamesCID,
 		cmdCreateChannelURLTable, cmdCreateIndexChannelURLCID,
@@ -234,7 +273,11 @@ func createDatabaseStructure(db *sql.DB) (err error) {
 		cmdCreateTableProgrammeAudio, cmdCreateIndexProgrammeAudioPID,
 		cmdCreateTableProgrammePreviouslyShown, cmdCreateIndexProgrammePreviouslyShownPID,
 		cmdCreateTableProgrammePremiere, cmdCreateIndexProgrammePremierePID,
-		cmdCreateTableProgrammeLastChance, cmdCreateIndexProgrammeLastChancePID}
+		cmdCreateTableProgrammeLastChance, cmdCreateIndexProgrammeLastChancePID,
+		cmdCreateTableProgrammeSubtitles, cmdCreateIndexProgrammeSubtitlesPID, cmdCreateIndexProgrammeSubtitlesType,
+		cmdCreateTableProgrammeRating, cmdCreateIndexProgrammeRatingPID, cmdCreateIndexProgrammeRatingSystem,
+		cmdCreateTableProgrammeStarRating, cmdCreateIndexProgrammeStarRatingPID, cmdCreateIndexProgrammeStarRatingSystem,
+		cmdCreateTableProgrammeReview, cmdCreateIndexProgrammeReviewPID}
 
 	for _, dbobj := range objects {
 		err = execsql(dbobj, db)
