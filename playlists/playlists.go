@@ -32,6 +32,7 @@ type PlaylistItem struct {
 
 // Playlist content
 type Playlist struct {
+	pdb
 	db                     *sql.DB
 	tx                     *sql.Tx
 	stmtInsertPlaylistItem *sql.Stmt

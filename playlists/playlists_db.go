@@ -148,6 +148,8 @@ const (
 
 	cmdCreateTableProgrammeReview    = `CREATE TABLE programme_review(pid INTEGER, type TEXT, source TEXT, reviewer TEXT, lang TEXT, value TEXT)`
 	cmdCreateIndexProgrammeReviewPID = `CREATE INDEX ix_programme_review_pid ON programme_review(pid)`
+
+	cmdAnalyze = `ANALYZE`
 )
 
 const (
@@ -220,6 +222,9 @@ const (
 	cmdDeleteFromChannelsURL = `DELETE FROM channel_urls`
 )
 
+type pdb struct {
+}
+
 var db *sql.DB
 var dbname = getPlaylistDatabaseName()
 
@@ -285,6 +290,15 @@ func createDatabaseStructure(db *sql.DB) (err error) {
 		if err != nil {
 			return
 		}
+	}
+
+	return
+}
+
+func (p *pdb) analyze(db *sql.DB) (err error) {
+
+	if err = execsql(cmdAnalyze, db); err != nil {
+		return
 	}
 
 	return

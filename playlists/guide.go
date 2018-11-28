@@ -266,6 +266,135 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		return
 	}
 
+	if err = g.checkAppendProgrammeTitle(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeSubTitle(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeDesc(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeActors(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeAdapters(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeCommentators(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeComposers(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeDirectors(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeEditors(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeGuests(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammePresenters(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeProducers(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeWriters(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeDates(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeCategories(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeKeywords(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeLanguages(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeOriginalLanguages(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeLength(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeIcon(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeCountry(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeEpisodeNum(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeVideo(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeAudio(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammePreviouslyShown(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammePremiere(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeLastChance(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeSubtitles(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeRating(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeStarRating(pid, p); err != nil {
+		return
+	}
+
+	if err = g.checkAppendProgrammeReview(pid, p); err != nil {
+		return
+	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeTitle(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.Title) > 0 {
 
 		titles := make([]*XMLTVProgrammeTitle, len(p.Title))
@@ -278,6 +407,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeSubTitle(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.SubTitle) > 0 {
 
@@ -292,6 +426,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammeDesc(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.Desc) > 0 {
 
 		desc := make([]*XMLTVProgrammeDesc, len(p.Desc))
@@ -304,6 +443,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeActors(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Actors) > 0 {
 
@@ -318,6 +462,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammeAdapters(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.Credits.Adapters) > 0 {
 
 		adapters := make([]*string, len(p.Credits.Adapters))
@@ -330,6 +479,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeCommentators(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Commentators) > 0 {
 
@@ -344,6 +498,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammeComposers(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.Credits.Composers) > 0 {
 
 		composers := make([]*string, len(p.Credits.Composers))
@@ -356,6 +515,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeDirectors(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Directors) > 0 {
 
@@ -370,6 +534,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammeEditors(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.Credits.Editors) > 0 {
 
 		editors := make([]*string, len(p.Credits.Editors))
@@ -382,6 +551,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeGuests(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Guests) > 0 {
 
@@ -396,6 +570,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammePresenters(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.Credits.Presenters) > 0 {
 
 		presenters := make([]*string, len(p.Credits.Presenters))
@@ -408,6 +587,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeProducers(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Producers) > 0 {
 
@@ -422,6 +606,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammeWriters(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.Credits.Writers) > 0 {
 
 		writers := make([]*string, len(p.Credits.Writers))
@@ -434,6 +623,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeDates(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.Dates) > 0 {
 
@@ -448,6 +642,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammeCategories(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.Categories) > 0 {
 
 		categories := make([]*XMLTVProgrammeCategory, len(p.Categories))
@@ -460,6 +659,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeKeywords(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.Keywords) > 0 {
 
@@ -474,6 +678,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammeLanguages(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.Languages) > 0 {
 
 		languages := make([]*XMLTVProgrammeLanguage, len(p.Languages))
@@ -486,6 +695,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeOriginalLanguages(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.OriginalLanguages) > 0 {
 
@@ -500,6 +714,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammeLength(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.Length) > 0 {
 
 		length := make([]*XMLTVProgrammeLength, len(p.Length))
@@ -512,6 +731,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeIcon(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.Icon) > 0 {
 
@@ -526,6 +750,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammeCountry(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.Country) > 0 {
 
 		countries := make([]*XMLTVProgrammeCountry, len(p.Country))
@@ -538,6 +767,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeEpisodeNum(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.EpisodeNum) > 0 {
 
@@ -552,6 +786,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammeVideo(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.Video) > 0 {
 
 		video := make([]*XMLTVProgrammeVideo, len(p.Video))
@@ -564,6 +803,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeAudio(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.Audio) > 0 {
 
@@ -578,6 +822,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammePreviouslyShown(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.PreviouslyShown) > 0 {
 
 		shown := make([]*XMLTVProgrammePreviouslyShown, len(p.PreviouslyShown))
@@ -590,6 +839,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammePremiere(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.Premiere) > 0 {
 
@@ -604,6 +858,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammeLastChance(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.LastChance) > 0 {
 
 		lc := make([]*XMLTVProgrammmeLastChance, len(p.LastChance))
@@ -616,6 +875,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeSubtitles(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.Subtitles) > 0 {
 
@@ -630,6 +894,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammeRating(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.Rating) > 0 {
 
 		rating := make([]*XMLTVProgrammeRating, len(p.Rating))
@@ -643,6 +912,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 		}
 	}
 
+	return
+}
+
+func (g *Guide) checkAppendProgrammeStarRating(pid int64, p *XMLTVProgramme) (err error) {
+
 	if len(p.StarRating) > 0 {
 
 		rating := make([]*XMLTVProgrammeStarRating, len(p.StarRating))
@@ -655,6 +929,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 			return
 		}
 	}
+
+	return
+}
+
+func (g *Guide) checkAppendProgrammeReview(pid int64, p *XMLTVProgramme) (err error) {
 
 	if len(p.Review) > 0 {
 
