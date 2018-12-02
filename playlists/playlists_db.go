@@ -41,8 +41,8 @@ const (
 	cmdCreateTableProgramme = `CREATE TABLE programme (
 	pid INTEGER,
 	channel_id TEXT,
-	start TEXT,
-	stop TEXT,
+	start DATETIME,
+	stop DATETIME,
 	pdc_start TEXT,
 	vps_start TEXT,
 	show_view TEXT,
@@ -149,6 +149,8 @@ const (
 	cmdCreateTableProgrammeReview    = `CREATE TABLE programme_review(pid INTEGER, type TEXT, source TEXT, reviewer TEXT, lang TEXT, value TEXT)`
 	cmdCreateIndexProgrammeReviewPID = `CREATE INDEX ix_programme_review_pid ON programme_review(pid)`
 
+	cmdCreateTableProgrammeLangStat = `CREATE TABLE programme_lang_stat(lang TEXT, lang_count INTEGER)`
+
 	cmdAnalyze = `ANALYZE`
 )
 
@@ -215,6 +217,71 @@ const (
 	cmdAppendProgrammeRating           = `INSERT INTO programme_rating(pid, system, value, src, width, height) VALUES(?, ?, ?, ?, ?, ?)`
 	cmdAppendProgrammeStarRating       = `INSERT INTO programme_star_rating(pid, system, value, src, width, height) VALUES(?, ?, ?, ?, ?, ?)`
 	cmdAppendProgrammeReview           = `INSERT INTO programme_review(pid, type, source, reviewer, lang, value) VALUES(?, ?, ?, ?, ?, ?)`
+
+	cmdAppendProgrammeLangStat = `INSERT INTO programme_lang_stat(lang, lang_count)
+    SELECT l.lang, SUM(l.lang_count) AS lang_count FROM
+    (
+        SELECT pt.lang, count(pt.lang) AS lang_count FROM programme_titles as pt
+        GROUP BY pt.lang
+
+        UNION
+
+        SELECT pst.lang, count(pst.lang) AS lang_count FROM programme_sub_titles as pst
+        GROUP BY pst.lang
+
+        UNION
+
+        SELECT pd.lang, count(pd.lang) AS lang_count FROM programme_desc as pd
+        GROUP BY pd.lang
+
+        UNION
+
+        SELECT pc.lang, count(pc.lang) AS lang_count FROM programme_categories as pc
+        GROUP BY pc.lang
+
+        UNION
+
+        SELECT pk.lang, count(pk.lang) AS lang_count FROM programme_keywords as pk
+        GROUP BY pk.lang
+
+        UNION
+
+        SELECT pl.lang, count(pl.lang) AS lang_count FROM programme_languages as pl
+        GROUP BY pl.lang
+
+        UNION
+
+        SELECT pol.lang, count(pol.lang) AS lang_count FROM programme_original_languages as pol
+        GROUP BY pol.lang
+
+        UNION
+
+        SELECT pc.lang, count(pc.lang) AS lang_count FROM programme_countries as pc
+        GROUP BY pc.lang
+
+        UNION
+
+        SELECT pp.lang, count(pp.lang) AS lang_count FROM programme_premiere as pp
+        GROUP BY pp.lang
+
+        UNION
+
+        SELECT plc.lang, count(plc.lang) AS lang_count FROM programme_last_chance as plc
+        GROUP BY plc.lang
+
+        UNION
+
+        SELECT ps.lang, count(ps.lang) AS lang_count FROM programme_subtitles as ps
+        GROUP BY ps.lang
+
+        UNION
+
+        SELECT pr.lang, count(pr.lang) AS lang_count FROM programme_review as pr
+        GROUP BY pr.lang
+    ) AS l
+	GROUP BY l.lang`
+
+	cmdPatchProgrammeStop = `UPDATE programme SET stop = NULL WHERE CAST(strftime('%Y', stop) AS INTEGER) <= 2000`
 )
 
 const (
@@ -247,7 +314,7 @@ func init() {
 
 func createDatabaseStructure(db *sql.DB) (err error) {
 
-	objects := [77]string{cmdCreateTablePlaylist, cmdCreateIndexPlaylistCID,
+	objects := [78]string{cmdCreateTablePlaylist, cmdCreateIndexPlaylistCID,
 		cmdCreateTableChannels, cmdCreateIndexChannelsCID, cmdCreateIndexChannelsChannelID,
 		cmdCreateTableChannelDisplayNames, cmdCreateIndexChannelDisplayNamesCID,
 		cmdCreateChannelURLTable, cmdCreateIndexChannelURLCID,
@@ -282,7 +349,8 @@ func createDatabaseStructure(db *sql.DB) (err error) {
 		cmdCreateTableProgrammeSubtitles, cmdCreateIndexProgrammeSubtitlesPID, cmdCreateIndexProgrammeSubtitlesType,
 		cmdCreateTableProgrammeRating, cmdCreateIndexProgrammeRatingPID, cmdCreateIndexProgrammeRatingSystem,
 		cmdCreateTableProgrammeStarRating, cmdCreateIndexProgrammeStarRatingPID, cmdCreateIndexProgrammeStarRatingSystem,
-		cmdCreateTableProgrammeReview, cmdCreateIndexProgrammeReviewPID}
+		cmdCreateTableProgrammeReview, cmdCreateIndexProgrammeReviewPID,
+		cmdCreateTableProgrammeLangStat}
 
 	for _, dbobj := range objects {
 		err = execsql(dbobj, db)
@@ -295,11 +363,25 @@ func createDatabaseStructure(db *sql.DB) (err error) {
 	return
 }
 
-func (p *pdb) analyze(db *sql.DB) (err error) {
+func (p *pdb) analyze(db *sql.DB, tx *sql.Tx) (err error) {
 
-	if err = execsql(cmdAnalyze, db); err != nil {
+	var stmt *sql.Stmt
+
+	if tx == nil {
+		if stmt, err = db.Prepare(cmdAnalyze); err != nil {
+			return
+		}
+
+		_, err = stmt.Exec()
+
 		return
 	}
+
+	if stmt, err = tx.Prepare(cmdAnalyze); err != nil {
+		return
+	}
+
+	_, err = stmt.Exec()
 
 	return
 }

@@ -83,6 +83,12 @@ func (p *Playlist) Read(data []byte, parser IPlaylistParser) (err error) {
 
 	err = parser.AsyncParse(data, callback)
 
+	if err != nil {
+		return
+	}
+
+	err = p.analyze(p.db, p.tx)
+
 	return
 }
 

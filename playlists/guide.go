@@ -27,6 +27,7 @@ type GuideItem struct {
 
 // Guide content
 type Guide struct {
+	pdb
 	db   *sql.DB
 	tx   *sql.Tx
 	stmt map[string]*sql.Stmt
@@ -71,7 +72,8 @@ var queries = map[string]string{
 	"cmdAppendProgrammeSubtitles":        cmdAppendProgrammeSubtitles,
 	"cmdAppendProgrammeRating":           cmdAppendProgrammeRating,
 	"cmdAppendProgrammeStarRating":       cmdAppendProgrammeStarRating,
-	"cmdAppendProgrammeReview":           cmdAppendProgrammeReview}
+	"cmdAppendProgrammeReview":           cmdAppendProgrammeReview,
+	"cmdAppendProgrammeLangStat":         cmdAppendProgrammeLangStat}
 
 // CurrentGuide returns guide object
 func CurrentGuide() *Guide {
@@ -136,7 +138,15 @@ func (g *Guide) Read(data []byte, parser *XMLTVParser) (err error) {
 		return g.appendProgramme(p)
 	}
 
-	err = parser.Parse(data)
+	if err = parser.Parse(data); err != nil {
+		return
+	}
+
+	if err = g.appendProgrammeLangStat(); err != nil {
+		return
+	}
+
+	err = g.analyze(g.db, g.tx)
 
 	return
 }
@@ -958,7 +968,19 @@ func (g *Guide) appendProgrammeRecord(p *XMLTVProgramme) (int64, error) {
 	cs := g.stmt["cmdAppendGuideProgramme"]
 	us := g.stmt["cmdUpdateGuideProgrammePID"]
 
-	res, err := cs.Exec(&p.Channel, &p.Start, &p.Stop, &p.PDCStart, &p.VPSStart,
+	start, err := timeOfProgramme(p.Start)
+
+	if err != nil {
+		return pid, err
+	}
+
+	stop, err := timeOfProgramme(p.Stop)
+
+	if err != nil {
+		return pid, err
+	}
+
+	res, err := cs.Exec(&p.Channel, &start, &stop, &p.PDCStart, &p.VPSStart,
 		&p.ShowView, &p.VideoPlus, &p.ClumpIdx)
 
 	if err != nil {
@@ -1122,6 +1144,7 @@ func (g *Guide) appendProgrammeWriters(pid int64, writers []*string) (err error)
 func (g *Guide) appendProgrammeDates(pid int64, dates []*string) (err error) {
 
 	for _, d := range dates {
+
 		if _, err = g.stmt["cmdAppendProgrammeDates"].Exec(&pid, &d); err != nil {
 			return
 		}
@@ -1357,5 +1380,11 @@ func (g *Guide) appendProgrammeReview(pid int64, review []*XMLTVProgrammeReview)
 		}
 	}
 
+	return
+}
+
+func (g *Guide) appendProgrammeLangStat() (err error) {
+
+	_, err = g.stmt["cmdAppendProgrammeLangStat"].Exec()
 	return
 }
