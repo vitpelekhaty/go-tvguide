@@ -19,6 +19,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jroimartin/gocui"
 
@@ -54,7 +55,6 @@ var cmdView = &cobra.Command{
 		}
 
 		playlist := pl.CurrentPlaylist()
-		guide := pl.CurrentGuide()
 
 		err = playlist.Read(data, parser)
 
@@ -71,8 +71,26 @@ var cmdView = &cobra.Command{
 			return err
 		}
 
+		guide := pl.CurrentGuide()
 		gparser := &pl.XMLTVParser{}
-		err = guide.Read(data, gparser)
+
+		err = func(g *pl.Guide, p *pl.XMLTVParser, d []byte) error {
+
+			st := time.Now()
+
+			fmt.Println("TV guide reading. Please, wait...")
+
+			defer func(t time.Time) {
+
+				et := time.Now()
+				d := et.Sub(t)
+
+				fmt.Printf("TV Guide reading completed in %.3fs\n", d.Seconds())
+			}(st)
+
+			return guide.Read(data, gparser)
+
+		}(guide, gparser, data)
 
 		if err != nil {
 			return err

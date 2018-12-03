@@ -19,15 +19,20 @@ package playlists
 import (
 	"database/sql"
 	"errors"
+	"time"
 )
 
 // GuideItem contains info about tv programme
 type GuideItem struct {
 }
 
+type gpatch struct {
+}
+
 // Guide content
 type Guide struct {
 	pdb
+	gpatch
 	db   *sql.DB
 	tx   *sql.Tx
 	stmt map[string]*sql.Stmt
@@ -146,7 +151,11 @@ func (g *Guide) Read(data []byte, parser *XMLTVParser) (err error) {
 		return
 	}
 
-	err = g.analyze(g.db, g.tx)
+	if err = g.analyze(g.db, g.tx); err != nil {
+		return
+	}
+
+	err = g.patchProgrammeStopTime(g.db, g.tx, time.Now().Year())
 
 	return
 }
@@ -1386,5 +1395,28 @@ func (g *Guide) appendProgrammeReview(pid int64, review []*XMLTVProgrammeReview)
 func (g *Guide) appendProgrammeLangStat() (err error) {
 
 	_, err = g.stmt["cmdAppendProgrammeLangStat"].Exec()
+	return
+}
+
+func (gp *gpatch) patchProgrammeStopTime(db *sql.DB, tx *sql.Tx, yearLessThan int) (err error) {
+
+	var stmt *sql.Stmt
+
+	if tx == nil {
+		if stmt, err = db.Prepare(cmdPatchProgrammeStop); err != nil {
+			return
+		}
+
+		_, err = stmt.Exec(&yearLessThan)
+
+		return
+	}
+
+	if stmt, err = tx.Prepare(cmdPatchProgrammeStop); err != nil {
+		return
+	}
+
+	_, err = stmt.Exec(&yearLessThan)
+
 	return
 }

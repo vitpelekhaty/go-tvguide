@@ -42,5 +42,5 @@ func timeOfProgramme(st string) (time.Time, error) {
 		}
 	}
 
-	return et, fmt.Errorf("%q parsing error", st)
+	return et, fmt.Errorf(`string "%q" parsing error`, st)
 }

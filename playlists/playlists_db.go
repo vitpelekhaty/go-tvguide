@@ -281,7 +281,7 @@ const (
     ) AS l
 	GROUP BY l.lang`
 
-	cmdPatchProgrammeStop = `UPDATE programme SET stop = NULL WHERE CAST(strftime('%Y', stop) AS INTEGER) <= 2000`
+	cmdPatchProgrammeStop = `UPDATE programme SET stop = NULL WHERE CAST(strftime('%Y', stop) AS INTEGER) < ?`
 )
 
 const (
