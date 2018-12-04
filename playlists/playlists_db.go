@@ -151,7 +151,8 @@ const (
 
 	cmdCreateTableProgrammeLangStat = `CREATE TABLE programme_lang_stat(lang TEXT, lang_count INTEGER)`
 
-	cmdAnalyze = `ANALYZE`
+	cmdAnalyze            = `ANALYZE`
+	cmdPatchProgrammeStop = `UPDATE programme SET stop = NULL WHERE CAST(strftime('%Y', stop) AS INTEGER) < ?`
 )
 
 const (
@@ -280,8 +281,6 @@ const (
         GROUP BY pr.lang
     ) AS l
 	GROUP BY l.lang`
-
-	cmdPatchProgrammeStop = `UPDATE programme SET stop = NULL WHERE CAST(strftime('%Y', stop) AS INTEGER) < ?`
 )
 
 const (

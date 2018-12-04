@@ -96,7 +96,7 @@ var cmdView = &cobra.Command{
 			return err
 		}
 
-		gui, err := ui.NewPlaylistViewer(playlist)
+		gui, err := ui.NewPlaylistViewer(playlist, guide)
 
 		if err != nil {
 			return err

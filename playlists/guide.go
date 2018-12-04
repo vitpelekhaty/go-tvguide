@@ -80,6 +80,20 @@ var queries = map[string]string{
 	"cmdAppendProgrammeReview":           cmdAppendProgrammeReview,
 	"cmdAppendProgrammeLangStat":         cmdAppendProgrammeLangStat}
 
+const (
+	cmdSelectDefaultLanguage = `SELECT lang FROM programme_lang_stat ORDER BY lang_count DESC LIMIT 1`
+
+	cmdSelectChannelGuide = `SELECT p.pid, datetime(p.start, 'localtime') AS start
+		, datetime(p.stop, 'localtime') AS stop, pt.title 
+	FROM programme AS p
+		INNER JOIN channels AS c ON (p.channel_id = c.channel_id)
+			INNER JOIN channel_display_names AS cdn ON (cdn.cid = c.cid) AND (cdn.lang = ?)
+				INNER JOIN playlist AS pl ON (pl.id = cdn.display_name) AND (pl.id = ?)
+					INNER JOIN programme_titles AS pt ON (pt.pid = p.pid) AND (pt.lang = ?)
+	WHERE datetime(p.start, 'localtime') >= ?
+	ORDER BY p.start`
+)
+
 // CurrentGuide returns guide object
 func CurrentGuide() *Guide {
 
@@ -110,6 +124,13 @@ func (g *Guide) Read(data []byte, parser *XMLTVParser) (err error) {
 	}
 
 	defer func() {
+
+		for _, stmt := range g.stmt {
+			stmt.Close()
+		}
+
+		g.stmt = make(map[string]*sql.Stmt, 0)
+
 		if err != nil {
 			tx.Rollback()
 			return
@@ -1417,6 +1438,26 @@ func (gp *gpatch) patchProgrammeStopTime(db *sql.DB, tx *sql.Tx, yearLessThan in
 	}
 
 	_, err = stmt.Exec(&yearLessThan)
+
+	return
+}
+
+// DefaultProgrammeLanguage returns most common language in the TV guide
+func (g *Guide) DefaultProgrammeLanguage() (lang string) {
+
+	stmt, err := g.db.Prepare(cmdSelectDefaultLanguage)
+
+	if err != nil {
+		return
+	}
+
+	defer stmt.Close()
+
+	err = stmt.QueryRow(1).Scan(&lang)
+
+	if err != nil {
+		return ""
+	}
 
 	return
 }

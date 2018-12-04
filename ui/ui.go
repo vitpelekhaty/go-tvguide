@@ -37,10 +37,12 @@ var (
 	channels *VirtualListBox
 	guide    *VirtualListBox
 	playlist *pl.Playlist
+	tvg      *pl.Guide
+	lang     string
 )
 
 // NewPlaylistViewer returns the iptv playlist viewer
-func NewPlaylistViewer(p *pl.Playlist) (*gocui.Gui, error) {
+func NewPlaylistViewer(p *pl.Playlist, g *pl.Guide) (*gocui.Gui, error) {
 
 	gui, err := gocui.NewGui(gocui.OutputNormal)
 
@@ -49,6 +51,10 @@ func NewPlaylistViewer(p *pl.Playlist) (*gocui.Gui, error) {
 	}
 
 	playlist = p
+	tvg = g
+
+	lang = tvg.DefaultProgrammeLanguage()
+
 	group, err := playlist.Group(0)
 
 	if err != nil {
