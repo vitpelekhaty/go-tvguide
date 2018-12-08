@@ -197,6 +197,18 @@ func (p *Playlist) Channels(group string) []*PlaylistItem {
 	return items
 }
 
+// Channel returns info about the specified channel
+func (p *Playlist) Channel(index int, group string) (*PlaylistItem, error) {
+
+	pi := p.Channels(group)
+
+	if index >= 0 && index < len(pi) {
+		return pi[index], nil
+	}
+
+	return nil, fmt.Errorf("Index (%d) out of bounds", index)
+}
+
 func (p *Playlist) appendItem(item *PlaylistItem) (err error) {
 
 	if item == nil {

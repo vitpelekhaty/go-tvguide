@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/jroimartin/gocui"
+	"github.com/logrusorgru/aurora"
 
 	pl "../playlists"
 )
@@ -44,18 +45,26 @@ var (
 // NewPlaylistViewer returns the iptv playlist viewer
 func NewPlaylistViewer(p *pl.Playlist, g *pl.Guide) (*gocui.Gui, error) {
 
-	gui, err := gocui.NewGui(gocui.OutputNormal)
-
-	if err != nil {
-		return gui, err
-	}
-
 	playlist = p
 	tvg = g
 
 	lang = tvg.DefaultProgrammeLanguage()
 
 	group, err := playlist.Group(0)
+
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := playlist.Channel(0, group)
+
+	if err != nil {
+		return nil, err
+	}
+
+	cid := c.ID
+
+	gui, err := gocui.NewGui(gocui.OutputNormal)
 
 	if err != nil {
 		return gui, err
@@ -99,6 +108,7 @@ func NewPlaylistViewer(p *pl.Playlist, g *pl.Guide) (*gocui.Gui, error) {
 		if err := loadChannels(playlist, group); err != nil {
 			return err
 		}
+
 		return nil
 	})
 
@@ -109,8 +119,19 @@ func NewPlaylistViewer(p *pl.Playlist, g *pl.Guide) (*gocui.Gui, error) {
 		return gui, err
 	}
 
-	guide = CreateVirtualListBox(view, true)
-	guide.SetTitle(captionOfGuideView)
+	guide = CreateVirtualListBox(view, false)
+	guide.OnGetText = getGuideText
+
+	gui.Update(func(g *gocui.Gui) error {
+
+		t := CurrentTime()
+
+		if err := loadChannelGuide(tvg, cid, lang, t); err != nil {
+			return err
+		}
+
+		return nil
+	})
 
 	return gui, nil
 }
@@ -131,8 +152,31 @@ func getGroupText(view *gocui.View, item interface{}) string {
 func getChannelText(view *gocui.View, item interface{}) string {
 
 	if pitem, ok := item.(*pl.PlaylistItem); ok {
-		text := pitem.Name
-		return text
+		return pitem.Name
+	}
+
+	return fmt.Sprintf("%v", item)
+}
+
+func getGuideText(view *gocui.View, item interface{}) string {
+
+	if gitem, ok := item.(*pl.GuideItem); ok {
+
+		t := CurrentTime()
+
+		if t.After(gitem.Stop) {
+			return fmt.Sprintf("%02d.%02d - %02d.%02d %s", gitem.StartHour(), gitem.StartMinute(),
+				gitem.StopHour(), gitem.StopMinute(), aurora.Gray(gitem.Title))
+		}
+
+		if t.After(gitem.Start) && t.Before(gitem.Stop) {
+			return fmt.Sprintf("%02d.%02d - %02d.%02d %s", gitem.StartHour(), gitem.StartMinute(),
+				gitem.StopHour(), gitem.StopMinute(), aurora.Green(gitem.Title))
+		}
+
+		return fmt.Sprintf("%02d.%02d - %02d.%02d %s", gitem.StartHour(), gitem.StartMinute(),
+			gitem.StopHour(), gitem.StopMinute(), gitem.Title)
+
 	}
 
 	return fmt.Sprintf("%v", item)

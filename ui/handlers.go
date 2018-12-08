@@ -18,6 +18,7 @@ package ui
 
 import (
 	"errors"
+	"time"
 
 	"github.com/jroimartin/gocui"
 
@@ -47,12 +48,42 @@ func listDown(ui *gocui.Gui, view *gocui.View) error {
 					return err
 				}
 
+				index := channels.ItemIndex()
+				ch := channels.Item(index)
+
+				if pi, ok := ch.(*pl.PlaylistItem); ok {
+
+					t := CurrentTime()
+
+					if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
+						return err
+					}
+				}
+
 				return nil
 			})
 		}
 
 	case captionOfChannelsView:
+
 		if err := channels.MoveDown(); err != nil {
+			return err
+		}
+
+		index := channels.ItemIndex()
+		ch := channels.Item(index)
+
+		if pi, ok := ch.(*pl.PlaylistItem); ok {
+
+			t := CurrentTime()
+
+			if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
+				return err
+			}
+		}
+
+	case captionOfGuideView:
+		if err := guide.MoveDown(); err != nil {
 			return err
 		}
 	}
@@ -79,12 +110,42 @@ func listUp(ui *gocui.Gui, view *gocui.View) error {
 					return err
 				}
 
+				index := channels.ItemIndex()
+				ch := channels.Item(index)
+
+				if pi, ok := ch.(*pl.PlaylistItem); ok {
+
+					t := CurrentTime()
+
+					if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
+						return err
+					}
+				}
+
 				return nil
 			})
 		}
 
 	case captionOfChannelsView:
+
 		if err := channels.MoveUp(); err != nil {
+			return err
+		}
+
+		index := channels.ItemIndex()
+		ch := channels.Item(index)
+
+		if pi, ok := ch.(*pl.PlaylistItem); ok {
+
+			t := CurrentTime()
+
+			if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
+				return err
+			}
+		}
+
+	case captionOfGuideView:
+		if err := guide.MoveUp(); err != nil {
 			return err
 		}
 	}
@@ -111,12 +172,42 @@ func listPageUp(ui *gocui.Gui, view *gocui.View) error {
 					return err
 				}
 
+				index := channels.ItemIndex()
+				ch := channels.Item(index)
+
+				if pi, ok := ch.(*pl.PlaylistItem); ok {
+
+					t := CurrentTime()
+
+					if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
+						return err
+					}
+				}
+
 				return nil
 			})
 		}
 
 	case captionOfChannelsView:
+
 		if err := channels.MovePageUp(); err != nil {
+			return err
+		}
+
+		index := channels.ItemIndex()
+		ch := channels.Item(index)
+
+		if pi, ok := ch.(*pl.PlaylistItem); ok {
+
+			t := CurrentTime()
+
+			if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
+				return err
+			}
+		}
+
+	case captionOfGuideView:
+		if err := guide.MovePageUp(); err != nil {
 			return err
 		}
 	}
@@ -143,12 +234,42 @@ func listPageDown(ui *gocui.Gui, view *gocui.View) error {
 					return err
 				}
 
+				index := channels.ItemIndex()
+				ch := channels.Item(index)
+
+				if pi, ok := ch.(*pl.PlaylistItem); ok {
+
+					t := CurrentTime()
+
+					if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
+						return err
+					}
+				}
+
 				return nil
 			})
 		}
 
 	case captionOfChannelsView:
+
 		if err := channels.MovePageDown(); err != nil {
+			return err
+		}
+
+		index := channels.ItemIndex()
+		ch := channels.Item(index)
+
+		if pi, ok := ch.(*pl.PlaylistItem); ok {
+
+			t := CurrentTime()
+
+			if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
+				return err
+			}
+		}
+
+	case captionOfGuideView:
+		if err := guide.MovePageDown(); err != nil {
 			return err
 		}
 	}
@@ -212,4 +333,27 @@ func loadChannels(p *pl.Playlist, group string) error {
 	}
 
 	return channels.SetItems(data)
+}
+
+func loadChannelGuide(g *pl.Guide, cid string, lang string, t time.Time) error {
+
+	guide.SetTitle(captionOfGuideView)
+
+	if g == nil {
+		return errors.New("Failed to load tv guide")
+	}
+
+	gg, err := g.ChannelGuide(cid, lang, t)
+
+	if err != nil {
+		return err
+	}
+
+	data := make([]interface{}, len(gg))
+
+	for i, p := range gg {
+		data[i] = p
+	}
+
+	return guide.SetItems(data)
 }

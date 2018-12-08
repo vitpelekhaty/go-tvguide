@@ -310,6 +310,7 @@ func (listbox *VirtualListBox) RecalcPages() {
 func (listbox *VirtualListBox) Draw() error {
 
 	if listbox.Empty() {
+		listbox.Clear()
 		return nil
 	}
 
@@ -320,6 +321,7 @@ func (listbox *VirtualListBox) Draw() error {
 func (listbox *VirtualListBox) DrawCurrentPage() error {
 
 	if listbox.Empty() {
+		listbox.Clear()
 		return nil
 	}
 

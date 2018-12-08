@@ -24,6 +24,10 @@ import (
 
 // GuideItem contains info about tv programme
 type GuideItem struct {
+	PID   int
+	Start time.Time
+	Stop  time.Time
+	Title string
 }
 
 type gpatch struct {
@@ -89,10 +93,12 @@ const (
 		INNER JOIN channels AS c ON (p.channel_id = c.channel_id)
 			INNER JOIN channel_display_names AS cdn ON (cdn.cid = c.cid) AND (cdn.lang = ?)
 				INNER JOIN playlist AS pl ON (pl.id = cdn.display_name) AND (pl.id = ?)
-					INNER JOIN programme_titles AS pt ON (pt.pid = p.pid) AND (pt.lang = ?)
+					INNER JOIN programme_titles AS pt ON (pt.pid = p.pid) AND (pt.lang = cdn.lang)
 	WHERE datetime(p.start, 'localtime') >= ?
 	ORDER BY p.start`
 )
+
+var dh = time.Duration(-4 * time.Hour)
 
 // CurrentGuide returns guide object
 func CurrentGuide() *Guide {
@@ -998,13 +1004,13 @@ func (g *Guide) appendProgrammeRecord(p *XMLTVProgramme) (int64, error) {
 	cs := g.stmt["cmdAppendGuideProgramme"]
 	us := g.stmt["cmdUpdateGuideProgrammePID"]
 
-	start, err := timeOfProgramme(p.Start)
+	start, err := TimeOfProgramme(p.Start)
 
 	if err != nil {
 		return pid, err
 	}
 
-	stop, err := timeOfProgramme(p.Stop)
+	stop, err := TimeOfProgramme(p.Stop)
 
 	if err != nil {
 		return pid, err
@@ -1453,11 +1459,93 @@ func (g *Guide) DefaultProgrammeLanguage() (lang string) {
 
 	defer stmt.Close()
 
-	err = stmt.QueryRow(1).Scan(&lang)
+	err = stmt.QueryRow().Scan(&lang)
 
 	if err != nil {
 		return ""
 	}
 
 	return
+}
+
+// ChannelGuide returns the tv guide for specified channel cid
+func (g *Guide) ChannelGuide(cid string, lang string, t time.Time) ([]*GuideItem, error) {
+
+	dt := t.Add(dh)
+	chguide := make([]*GuideItem, 0)
+
+	stmt, err := g.db.Prepare(cmdSelectChannelGuide)
+
+	if err != nil {
+		return chguide, err
+	}
+
+	defer stmt.Close()
+
+	rows, err := stmt.Query(&lang, &cid, &dt)
+
+	if err != nil {
+		return chguide, err
+	}
+
+	for rows.Next() {
+
+		var (
+			pid    int
+			start  time.Time
+			sstart string
+			stop   time.Time
+			sstop  string
+			title  string
+		)
+
+		err = rows.Scan(&pid, &sstart, &sstop, &title)
+
+		if err != nil {
+			return make([]*GuideItem, 0), err
+		}
+
+		start, err = TimeOfProgramme(sstart)
+
+		if err != nil {
+			return make([]*GuideItem, 0), err
+		}
+
+		stop, err = TimeOfProgramme(sstop)
+
+		if err != nil {
+			return make([]*GuideItem, 0), err
+		}
+
+		p := &GuideItem{pid, start, stop, title}
+		chguide = append(chguide, p)
+	}
+
+	err = rows.Err()
+
+	if err != nil {
+		return make([]*GuideItem, 0), err
+	}
+
+	return chguide, nil
+}
+
+// StartHour returns the hour of the TV program start
+func (gi *GuideItem) StartHour() int {
+	return gi.Start.Hour()
+}
+
+// StartMinute returns the minute of the TV program start
+func (gi *GuideItem) StartMinute() int {
+	return gi.Start.Minute()
+}
+
+// StopHour returns the end hour of the TV program
+func (gi *GuideItem) StopHour() int {
+	return gi.Stop.Hour()
+}
+
+// StopMinute returns the end minute of the TV program
+func (gi *GuideItem) StopMinute() int {
+	return gi.Stop.Minute()
 }

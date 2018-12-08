@@ -42,14 +42,15 @@ func TestTimeOfProgramme(t *testing.T) {
 		{"20181027030000 +0300", wanttime{year: 2018, month: time.October, day: 27, hour: 3, minute: 0, second: 0, tzoffset: 10800}},
 		{"2018", wanttime{year: 2018, month: time.January, day: 1, hour: 0, minute: 0, second: 0, tzname: "UTC"}},
 		{"", wanttime{year: 1, month: time.January, day: 1, hour: 0, minute: 0, second: 0, tzname: "UTC"}},
+		{"2018-10-27 02:05:00", wanttime{year: 2018, month: time.October, day: 27, hour: 2, minute: 5, second: 0, tzname: "UTC"}},
 	}
 
 	for _, test := range tests {
 
-		got, err := timeOfProgramme(test.input)
+		got, err := TimeOfProgramme(test.input)
 
 		if err != nil {
-			t.Errorf("timeOfProgramme(%q) = %v (%q)", test.input, false, err)
+			t.Errorf("TimeOfProgramme(%q) = %v (%q)", test.input, false, err)
 		}
 
 		tzname, tzoffset := got.Zone()

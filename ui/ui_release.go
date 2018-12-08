@@ -14,35 +14,15 @@
 // either express or implied. See the License for the specific
 // language governing permissions and limitations under the License.
 
-package playlists
+// +build !debug
+
+package ui
 
 import (
-	"fmt"
-	"strings"
 	"time"
 )
 
-var layouts = [4]string{
-	"20060102150405 -0700",
-	"2006-01-02 15:04:05",
-	"20060102150405",
-	"2006"}
-
-// TimeOfProgramme return result of time parsing
-func TimeOfProgramme(st string) (time.Time, error) {
-
-	var et time.Time
-
-	if strings.Trim(st, " ") == "" {
-		return et, nil
-	}
-
-	for _, layout := range layouts {
-
-		if t, err := time.Parse(layout, st); err == nil {
-			return t, err
-		}
-	}
-
-	return et, fmt.Errorf(`string "%q" parsing error`, st)
+// CurrentTime returns local current time
+func CurrentTime() time.Time {
+	return time.Now()
 }
