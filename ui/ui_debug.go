@@ -24,5 +24,5 @@ import (
 
 // CurrentTime returns local current time
 func CurrentTime() time.Time {
-	return time.Date(2018, 10, 27, 4, 30, 0, 0, time.UTC)
+	return time.Date(2018, 10, 27, 10, 15, 0, 0, time.UTC)
 }

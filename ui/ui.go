@@ -27,10 +27,22 @@ import (
 )
 
 const (
-	captionOfGroupsView   = "Groups"
-	captionOfChannelsView = "Channels"
-	captionOfGuideView    = "Guide"
-	captionUndefined      = "<undefined>"
+	viewGroups  = "view_groups"
+	titleGroups = "Groups"
+
+	viewChannels  = "view_channels"
+	titleChannels = "Channels"
+
+	viewGuide  = "view_guide"
+	titleGuide = "Guide"
+
+	viewHelp  = "help_view"
+	titleHelp = "Help"
+
+	viewProgramme  = "programme_view"
+	titleProgramme = "Programme"
+
+	captionUndefined = "<undefined>"
 )
 
 var (
@@ -40,6 +52,7 @@ var (
 	playlist *pl.Playlist
 	tvg      *pl.Guide
 	lang     string
+	curview  *gocui.View
 )
 
 // NewPlaylistViewer returns the iptv playlist viewer
@@ -74,7 +87,7 @@ func NewPlaylistViewer(p *pl.Playlist, g *pl.Guide) (*gocui.Gui, error) {
 	setKeyBindings(gui)
 
 	gw, h := sizeOfGroupsView(gui)
-	view, err := gui.SetView(captionOfGroupsView, 0, 0, gw, h-1)
+	view, err := gui.SetView(viewGroups, 0, 0, gw, h-1)
 
 	if err != nil && err != gocui.ErrUnknownView {
 		return gui, err
@@ -94,7 +107,7 @@ func NewPlaylistViewer(p *pl.Playlist, g *pl.Guide) (*gocui.Gui, error) {
 	})
 
 	cw, h := sizeOfChannelsView(gui)
-	view, err = gui.SetView(captionOfChannelsView, gw+1, 0, gw+cw, h-1)
+	view, err = gui.SetView(viewChannels, gw+1, 0, gw+cw, h-1)
 
 	if err != nil && err != gocui.ErrUnknownView {
 		return gui, err
@@ -113,7 +126,7 @@ func NewPlaylistViewer(p *pl.Playlist, g *pl.Guide) (*gocui.Gui, error) {
 	})
 
 	w, h := gui.Size()
-	view, err = gui.SetView(captionOfGuideView, gw+cw+1, 0, w-1, h-1)
+	view, err = gui.SetView(viewGuide, gw+cw+1, 0, w-1, h-1)
 
 	if err != nil && err != gocui.ErrUnknownView {
 		return gui, err
@@ -163,20 +176,18 @@ func getGuideText(view *gocui.View, item interface{}) string {
 	if gitem, ok := item.(*pl.GuideItem); ok {
 
 		t := CurrentTime()
-
-		if t.After(gitem.Stop) {
-			return fmt.Sprintf("%02d.%02d - %02d.%02d %s", gitem.StartHour(), gitem.StartMinute(),
-				gitem.StopHour(), gitem.StopMinute(), aurora.Gray(gitem.Title))
-		}
-
-		if t.After(gitem.Start) && t.Before(gitem.Stop) {
-			return fmt.Sprintf("%02d.%02d - %02d.%02d %s", gitem.StartHour(), gitem.StartMinute(),
-				gitem.StopHour(), gitem.StopMinute(), aurora.Green(gitem.Title))
-		}
-
-		return fmt.Sprintf("%02d.%02d - %02d.%02d %s", gitem.StartHour(), gitem.StartMinute(),
+		text := fmt.Sprintf("%02d.%02d - %02d.%02d %s", gitem.StartHour(), gitem.StartMinute(),
 			gitem.StopHour(), gitem.StopMinute(), gitem.Title)
 
+		if t.After(gitem.Stop) || t == gitem.Stop {
+			return fmt.Sprintf("%s", aurora.Red(text))
+		}
+
+		if (t.After(gitem.Start) && t.Before(gitem.Stop)) || t == gitem.Start {
+			return text
+		}
+
+		return fmt.Sprintf("%s", aurora.Green(text))
 	}
 
 	return fmt.Sprintf("%v", item)
@@ -185,21 +196,21 @@ func getGuideText(view *gocui.View, item interface{}) string {
 func layout(ui *gocui.Gui) error {
 
 	gw, h := sizeOfGroupsView(ui)
-	_, err := ui.SetView(captionOfGroupsView, 0, 0, gw, h-1)
+	_, err := ui.SetView(viewGroups, 0, 0, gw, h-1)
 
 	if err != nil {
 		return err
 	}
 
 	cw, h := sizeOfChannelsView(ui)
-	_, err = ui.SetView(captionOfChannelsView, gw+1, 0, gw+cw, h-1)
+	_, err = ui.SetView(viewChannels, gw+1, 0, gw+cw, h-1)
 
 	if err != nil {
 		return err
 	}
 
 	w, h := ui.Size()
-	_, err = ui.SetView(captionOfGuideView, gw+cw+1, 0, w-1, h-1)
+	_, err = ui.SetView(viewGuide, gw+cw+1, 0, w-1, h-1)
 
 	if err != nil {
 		return err

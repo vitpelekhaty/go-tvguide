@@ -58,5 +58,41 @@ func setKeyBindings(ui *gocui.Gui) error {
 		return err
 	}
 
+	err = ui.SetKeybinding("", gocui.KeyF1, gocui.ModNone, help)
+
+	if err != nil {
+		return err
+	}
+
+	err = ui.SetKeybinding("", gocui.KeyCtrlQ, gocui.ModNone, destroyTopView)
+
+	if err != nil {
+		return err
+	}
+
+	err = ui.SetKeybinding("", gocui.KeyCtrl6, gocui.ModNone, focusGroupsView)
+
+	if err != nil {
+		return err
+	}
+
+	err = ui.SetKeybinding("", gocui.KeyCtrl7, gocui.ModNone, focusChannelsView)
+
+	if err != nil {
+		return err
+	}
+
+	err = ui.SetKeybinding("", gocui.KeyCtrl8, gocui.ModNone, focusGuideView)
+
+	if err != nil {
+		return err
+	}
+
+	err = ui.SetKeybinding("", gocui.KeyEnter, gocui.ModNone, onEnter)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

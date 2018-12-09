@@ -17,6 +17,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"runtime"
 
@@ -28,6 +29,7 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	if err := commands.Execute(); err != nil {
+		log.Println(err)
 		os.Exit(1)
 	}
 
