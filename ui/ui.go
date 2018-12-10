@@ -173,17 +173,17 @@ func getChannelText(view *gocui.View, item interface{}) string {
 
 func getGuideText(view *gocui.View, item interface{}) string {
 
-	if gitem, ok := item.(*pl.GuideItem); ok {
+	if p, ok := item.(*pl.Programme); ok {
 
 		t := CurrentTime()
-		text := fmt.Sprintf("%02d.%02d - %02d.%02d %s", gitem.StartHour(), gitem.StartMinute(),
-			gitem.StopHour(), gitem.StopMinute(), gitem.Title)
+		text := fmt.Sprintf("%02d.%02d - %02d.%02d %s", p.StartHour(), p.StartMinute(),
+			p.StopHour(), p.StopMinute(), p.Title)
 
-		if t.After(gitem.Stop) || t == gitem.Stop {
+		if t.After(p.Stop) || t == p.Stop {
 			return fmt.Sprintf("%s", aurora.Red(text))
 		}
 
-		if (t.After(gitem.Start) && t.Before(gitem.Stop)) || t == gitem.Start {
+		if (t.After(p.Start) && t.Before(p.Stop)) || t == p.Start {
 			return text
 		}
 

@@ -533,7 +533,7 @@ func onEnter(ui *gocui.Gui, view *gocui.View) error {
 func createProgrammeView(ui *gocui.Gui, title string) error {
 
 	w, h := ui.Size()
-	v, err := ui.SetView(viewProgramme, w/6, h/5, w*5/6, h*4/5)
+	v, err := ui.SetView(viewProgramme, w/6, h/6, w*5/6, h*5/6)
 
 	if err != nil && err != gocui.ErrUnknownView {
 		return err

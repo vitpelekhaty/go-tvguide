@@ -352,7 +352,8 @@ func createDatabaseStructure(db *sql.DB) (err error) {
 		cmdCreateTableProgrammeLangStat}
 
 	for _, dbobj := range objects {
-		err = execsql(dbobj, db)
+
+		_, err = db.Exec(dbobj)
 
 		if err != nil {
 			return
@@ -383,21 +384,4 @@ func (p *pdb) analyze(db *sql.DB, tx *sql.Tx) (err error) {
 	_, err = stmt.Exec()
 
 	return
-}
-
-func execsql(cmd string, db *sql.DB) error {
-
-	stmt, err := db.Prepare(cmd)
-
-	if err != nil {
-		return err
-	}
-
-	_, err = stmt.Exec()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
