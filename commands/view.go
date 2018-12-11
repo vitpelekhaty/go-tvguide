@@ -19,14 +19,12 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/jroimartin/gocui"
-
 	"github.com/spf13/cobra"
-
-	"github.com/vbauerster/mpb"
-	"github.com/vbauerster/mpb/decor"
 
 	pl "../playlists"
 	ui "../ui"
@@ -146,28 +144,15 @@ func loadFromFile(loader *pl.FileLoader, path string) ([]byte, error) {
 
 func loadFromURL(loader *pl.HTTPLoader, url string) ([]byte, error) {
 
-	var total int64 = int64(loader.Total)
 	comment := "Downloading " + url
 
-	pb := mpb.New(mpb.WithWidth(40))
-
-	bar := pb.AddBar(total,
-		mpb.PrependDecorators(
-			decor.Name(comment, decor.WC{W: len(comment) + 1, C: decor.DidentRight}),
-			decor.OnComplete(decor.EwmaETA(decor.ET_STYLE_GO, 60, decor.WC{W: 4}), "done")),
-		mpb.AppendDecorators(decor.Percentage()))
-
-	fprogress := func(complete, total uint64) {
-
-		if complete > total {
-			bar.SetTotal(int64(complete+10), false)
-		}
-
-		bar.IncrBy(int(complete))
+	fprogress := func(complete uint64) {
+		fmt.Printf("\r%s ... %s", comment, strings.Repeat(" ", 35))
+		fmt.Printf("\r%s ... %s", comment, humanize.Bytes(complete))
 	}
 
 	fdone := func() {
-		pb.Wait()
+		fmt.Print("\n")
 	}
 
 	loader.OnProgress = fprogress

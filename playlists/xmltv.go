@@ -329,7 +329,9 @@ func (parser *XMLTVParser) Parse(data []byte) error {
 func (parser *XMLTVParser) parseHeader(data []byte) (err error) {
 
 	r := bytes.NewReader(data)
+
 	decoder := xml.NewDecoder(r)
+	decoder.Strict = false
 
 	var ename string
 	var token xml.Token
@@ -371,7 +373,9 @@ func (parser *XMLTVParser) parseHeader(data []byte) (err error) {
 func (parser *XMLTVParser) parseTVListing(data []byte) (err error) {
 
 	r := bytes.NewReader(data)
+
 	decoder := xml.NewDecoder(r)
+	decoder.Strict = false
 
 	var ename string
 	var token xml.Token

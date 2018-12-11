@@ -20,22 +20,21 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"time"
 )
 
 // DownloadStartEvent - an event that fires before the start of the download
-type DownloadStartEvent func(total uint64)
+type DownloadStartEvent func()
 
 // DownloadDoneEvent - an event that fires after the download finishes
 type DownloadDoneEvent func()
 
 // DownloadProgressEvent - an event that fires on each iteration of the downloading
-type DownloadProgressEvent func(complete, total uint64)
+type DownloadProgressEvent func(complete uint64)
 
 // Downloader that downloads the file. Notifies through events about the change of download status
 type Downloader struct {
-	Total, Complete uint64
+	complete uint64
 
 	OnStart    DownloadStartEvent
 	OnDone     DownloadDoneEvent
@@ -45,19 +44,17 @@ type Downloader struct {
 func (d *Downloader) Write(data []byte) (int, error) {
 
 	count := len(data)
-	d.Complete += uint64(count)
+	d.complete += uint64(count)
 
-	d.progress(d.Complete, d.Total)
+	d.progress(d.complete)
 
 	return count, nil
 }
 
-func (d *Downloader) start(total uint64) {
-
-	d.Total = total
+func (d *Downloader) start() {
 
 	if d.OnStart != nil {
-		d.OnStart(total)
+		d.OnStart()
 	}
 }
 
@@ -68,10 +65,10 @@ func (d *Downloader) done() {
 	}
 }
 
-func (d *Downloader) progress(complete, total uint64) {
+func (d *Downloader) progress(complete uint64) {
 
 	if d.OnProgress != nil {
-		d.OnProgress(complete, total)
+		d.OnProgress(complete)
 	}
 }
 
@@ -89,8 +86,7 @@ func (d *Downloader) Run(url string) ([]byte, error) {
 
 	defer resp.Body.Close()
 
-	fsize, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
-	d.start(uint64(fsize))
+	d.start()
 
 	data, err := ioutil.ReadAll(io.TeeReader(resp.Body, d))
 
