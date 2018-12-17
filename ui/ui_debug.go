@@ -22,7 +22,9 @@ import (
 	"time"
 )
 
-// CurrentTime returns local current time
+// CurrentTime returns custom time
 func CurrentTime() time.Time {
-	return time.Date(2018, 10, 27, 10, 15, 0, 0, time.UTC)
+
+	tt := time.Now()
+	return time.Date(tt.Year(), tt.Month(), tt.Day(), tt.Hour(), tt.Minute(), 0, 0, time.UTC)
 }

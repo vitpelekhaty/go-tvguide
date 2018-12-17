@@ -1452,7 +1452,7 @@ func (g *Guide) ChannelGuide(cid string, lang string, t time.Time) ([]*Programme
 			start  time.Time
 			sstart string
 			stop   time.Time
-			sstop  string
+			sstop  sql.NullString
 			title  string
 		)
 
@@ -1468,10 +1468,17 @@ func (g *Guide) ChannelGuide(cid string, lang string, t time.Time) ([]*Programme
 			return make([]*Programme, 0), err
 		}
 
-		stop, err = TimeOfProgramme(sstop)
+		if sstop.Valid {
 
-		if err != nil {
-			return make([]*Programme, 0), err
+			stop, err = TimeOfProgramme(sstop.String)
+
+			if err != nil {
+				return make([]*Programme, 0), err
+			}
+		} else {
+
+			stop = start.AddDate(0, 0, 1)
+			stop = time.Date(stop.Year(), stop.Month(), stop.Day(), 0, 0, 0, 0, time.UTC)
 		}
 
 		p := &Programme{pid, start, stop, title}
@@ -1485,4 +1492,128 @@ func (g *Guide) ChannelGuide(cid string, lang string, t time.Time) ([]*Programme
 	}
 
 	return chguide, nil
+}
+
+// ProgrammeDescription returns description of the programme with pid
+func (g *Guide) ProgrammeDescription(pid int, lang string) (*ProgrammeDescription, error) {
+
+	pd := &ProgrammeDescription{}
+	pd.PID = pid
+
+	stmt, err := g.db.Prepare(cmdSelectProgrammeDescription)
+
+	if err != nil {
+		return pd, err
+	}
+
+	defer stmt.Close()
+
+	var (
+		id       int
+		start    time.Time
+		sstart   string
+		stop     time.Time
+		sstop    sql.NullString
+		title    sql.NullString
+		desc     sql.NullString
+		subtitle sql.NullString
+	)
+
+	err = stmt.QueryRow(&lang, &lang, &lang, &pid).Scan(&id, &sstart, &sstop, &title, &desc, &subtitle)
+
+	if err != nil {
+		return pd, err
+	}
+
+	start, err = TimeOfProgramme(sstart)
+
+	if err != nil {
+		return pd, err
+	}
+
+	pd.Start = start
+
+	if sstop.Valid {
+
+		stop, err = TimeOfProgramme(sstop.String)
+
+		if err != nil {
+			return pd, err
+		}
+	} else {
+
+		stop = start.AddDate(0, 0, 1)
+		stop = time.Date(stop.Year(), stop.Month(), stop.Day(), 0, 0, 0, 0, time.UTC)
+	}
+
+	pd.Stop = stop
+
+	if title.Valid {
+		pd.Title = title.String
+	}
+
+	if desc.Valid {
+		pd.Description = desc.String
+	}
+
+	if subtitle.Valid {
+		pd.SubTitle = subtitle.String
+	}
+
+	categories, err := g.ProgrammeCategories(pid, lang)
+
+	if err != nil {
+		return pd, err
+	}
+
+	if len(categories) > 0 {
+
+		pd.Category = make([]*string, len(categories))
+
+		for index, category := range categories {
+			pd.Category[index] = category
+		}
+	}
+	return pd, nil
+}
+
+// ProgrammeCategories returns categories of the programme with pid
+func (g *Guide) ProgrammeCategories(pid int, lang string) ([]*string, error) {
+
+	categories := make([]*string, 0)
+
+	stmt, err := g.db.Prepare(cmdSelectProgrammeCategories)
+
+	if err != nil {
+		return categories, err
+	}
+
+	defer stmt.Close()
+
+	rows, err := stmt.Query(&pid, &lang)
+
+	if err != nil {
+		return categories, err
+	}
+
+	for rows.Next() {
+
+		var category string
+
+		err = rows.Scan(&category)
+
+		if err != nil {
+			return categories, err
+		}
+
+		categories = append(categories, &category)
+	}
+
+	err = rows.Err()
+
+	if err != nil {
+		return categories, err
+	}
+
+	return categories, nil
 }

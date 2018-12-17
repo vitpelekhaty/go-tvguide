@@ -172,6 +172,39 @@ const (
 	WHERE pl.channels_group = ?
 	ORDER BY rowid
 	`
+
+	cmdSelectProgrammeDescription = `SELECT p.pid, datetime(p.start, 'localtime') AS start
+		, datetime(p.stop, 'localtime') AS stop, ifnull(pt.title, '') AS title
+   		, ifnull(pd."desc", '') AS [desc], ifnull(ps.sub_title, '') AS sub_title
+	FROM programme AS p
+    	LEFT JOIN programme_titles AS pt ON (pt.pid = p.pid) AND (pt.lang = ?)
+		LEFT JOIN programme_desc AS pd ON (pd.pid = p.pid) AND (pd.lang = ?)
+		LEFT JOIN programme_sub_titles AS ps ON (ps.pid = p.pid) and (ps.lang = ?)
+	WHERE (p.pid = ?)
+	LIMIT 1
+	`
+
+	cmdSelectProgrammeCategories = `SELECT ifnull(pc.category, '') AS category
+	FROM programme_categories AS pc 
+	WHERE (pc.pid = ?) AND (pc.lang = ?)
+	GROUP BY ifnull(pc.category, '')
+	`
+
+	cmdSelectProgrammeCountries = `SELECT ifnull(pc.country, '') AS country
+	FROM programme_countries AS pc
+	WHERE (pc.pid = ?) AND (pc.lang = ?) AND (ifnull(pc.country, '') <> '')
+	GROUP BY ifnull(pc.country, '')
+	`
+
+	cmdSelectProgrammeActors = `SELECT ifnull(pa.actor, '') AS actor, ifnull(pa.role, '') AS role
+	FROM programme_actors AS pa
+	WHERE (pa.pid = ?) AND (ifnull(pa.actor, '') <> '')
+	`
+
+	cmdSelectProgrammeDirectors = `SELECT ifnull(pd.director, '') AS director
+	FROM programme_directors AS pd
+	WHERE (pd.pid = ?) AND (ifnull(pd.director, '') <> '')
+	`
 )
 
 const (
@@ -281,11 +314,6 @@ const (
         GROUP BY pr.lang
     ) AS l
 	GROUP BY l.lang`
-)
-
-const (
-	cmdDeleteFromChannels    = `DELETE FROM channels`
-	cmdDeleteFromChannelsURL = `DELETE FROM channel_urls`
 )
 
 type pdb struct {

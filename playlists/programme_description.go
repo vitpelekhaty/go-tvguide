@@ -16,14 +16,26 @@
 
 package playlists
 
+// ProgrammeRating - programme rating
+type ProgrammeRating struct {
+	System string
+	Rating string
+}
+
+// ProgrammeActor - actor
+type ProgrammeActor struct {
+	Actor string
+	Role  string
+}
+
 // ProgrammeDescription - description of the programme
 type ProgrammeDescription struct {
 	Programme
 	SubTitle    string
 	Description string
-	Category    string
-	Country     string
+	Category    []*string
+	Country     []*string
 	Directors   []*string
-	Actors      []*string
-	Rating      string
+	Actors      []*ProgrammeActor
+	Rating      []*ProgrammeRating
 }
