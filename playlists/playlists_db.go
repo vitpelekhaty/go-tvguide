@@ -205,6 +205,12 @@ const (
 	FROM programme_directors AS pd
 	WHERE (pd.pid = ?) AND (ifnull(pd.director, '') <> '')
 	`
+
+	cmdSelectProgrammeRating = `SELECT ifnull(pr.system, '') AS system, ifnull(pr.value, '') AS value
+	FROM programme_rating AS pr
+	WHERE (pr.pid = ?) AND (ifnull(pr.system, '') <> '') AND (ifnull(pr.value, '') <> '')
+	GROUP BY ifnull(pr.system, ''), ifnull(pr.value, '')
+	`
 )
 
 const (

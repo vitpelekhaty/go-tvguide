@@ -1494,7 +1494,7 @@ func (g *Guide) ChannelGuide(cid string, lang string, t time.Time) ([]*Programme
 	return chguide, nil
 }
 
-// ProgrammeDescription returns description of the programme with pid
+// ProgrammeDescription returns description of the programme
 func (g *Guide) ProgrammeDescription(pid int, lang string) (*ProgrammeDescription, error) {
 
 	pd := &ProgrammeDescription{}
@@ -1574,10 +1574,71 @@ func (g *Guide) ProgrammeDescription(pid int, lang string) (*ProgrammeDescriptio
 			pd.Category[index] = category
 		}
 	}
+
+	countries, err := g.ProgrammeCountries(pid, lang)
+
+	if err != nil {
+		return pd, err
+	}
+
+	if len(countries) > 0 {
+
+		pd.Country = make([]*string, len(countries))
+
+		for index, country := range countries {
+			pd.Country[index] = country
+		}
+	}
+
+	directors, err := g.ProgrammeDirectors(pid)
+
+	if err != nil {
+		return pd, err
+	}
+
+	if len(directors) > 0 {
+
+		pd.Directors = make([]*string, len(directors))
+
+		for index, director := range directors {
+			pd.Directors[index] = director
+		}
+	}
+
+	actors, err := g.ProgrammeActors(pid)
+
+	if err != nil {
+		return pd, err
+	}
+
+	if len(actors) > 0 {
+
+		pd.Actors = make([]*ProgrammeActor, len(actors))
+
+		for index, actor := range actors {
+			pd.Actors[index] = actor
+		}
+	}
+
+	ratings, err := g.ProgrammeRating(pid)
+
+	if err != nil {
+		return pd, err
+	}
+
+	if len(ratings) > 0 {
+
+		pd.Rating = make([]*ProgrammeRating, len(ratings))
+
+		for index, rating := range ratings {
+			pd.Rating[index] = rating
+		}
+	}
+
 	return pd, nil
 }
 
-// ProgrammeCategories returns categories of the programme with pid
+// ProgrammeCategories returns categories of the programme
 func (g *Guide) ProgrammeCategories(pid int, lang string) ([]*string, error) {
 
 	categories := make([]*string, 0)
@@ -1616,4 +1677,172 @@ func (g *Guide) ProgrammeCategories(pid int, lang string) ([]*string, error) {
 	}
 
 	return categories, nil
+}
+
+// ProgrammeCountries returns countries where the programme was made
+func (g *Guide) ProgrammeCountries(pid int, lang string) ([]*string, error) {
+
+	countries := make([]*string, 0)
+
+	stmt, err := g.db.Prepare(cmdSelectProgrammeCountries)
+
+	if err != nil {
+		return countries, err
+	}
+
+	defer stmt.Close()
+
+	rows, err := stmt.Query(&pid, &lang)
+
+	if err != nil {
+		return countries, err
+	}
+
+	for rows.Next() {
+
+		var country string
+
+		err = rows.Scan(&country)
+
+		if err != nil {
+			return countries, err
+		}
+
+		countries = append(countries, &country)
+	}
+
+	err = rows.Err()
+
+	if err != nil {
+		return countries, err
+	}
+
+	return countries, nil
+}
+
+// ProgrammeDirectors returns directors of the programme
+func (g *Guide) ProgrammeDirectors(pid int) ([]*string, error) {
+
+	directors := make([]*string, 0)
+
+	stmt, err := g.db.Prepare(cmdSelectProgrammeDirectors)
+
+	if err != nil {
+		return directors, err
+	}
+
+	defer stmt.Close()
+
+	rows, err := stmt.Query(&pid)
+
+	if err != nil {
+		return directors, err
+	}
+
+	for rows.Next() {
+
+		var director string
+
+		err = rows.Scan(&director)
+
+		if err != nil {
+			return directors, err
+		}
+
+		directors = append(directors, &director)
+	}
+
+	err = rows.Err()
+
+	if err != nil {
+		return directors, err
+	}
+
+	return directors, nil
+}
+
+// ProgrammeActors return actors
+func (g *Guide) ProgrammeActors(pid int) ([]*ProgrammeActor, error) {
+
+	actors := make([]*ProgrammeActor, 0)
+
+	stmt, err := g.db.Prepare(cmdSelectProgrammeActors)
+
+	if err != nil {
+		return actors, err
+	}
+
+	defer stmt.Close()
+
+	rows, err := stmt.Query(&pid)
+
+	if err != nil {
+		return actors, err
+	}
+
+	for rows.Next() {
+
+		var actor, role string
+
+		err = rows.Scan(&actor, &role)
+
+		if err != nil {
+			return actors, err
+		}
+
+		a := &ProgrammeActor{Actor: actor, Role: role}
+
+		actors = append(actors, a)
+	}
+
+	err = rows.Err()
+
+	if err != nil {
+		return actors, err
+	}
+
+	return actors, nil
+}
+
+// ProgrammeRating returns rating of the programme
+func (g *Guide) ProgrammeRating(pid int) ([]*ProgrammeRating, error) {
+
+	ratings := make([]*ProgrammeRating, 0)
+
+	stmt, err := g.db.Prepare(cmdSelectProgrammeRating)
+
+	if err != nil {
+		return ratings, err
+	}
+
+	defer stmt.Close()
+
+	rows, err := stmt.Query(&pid)
+
+	if err != nil {
+		return ratings, err
+	}
+
+	for rows.Next() {
+
+		var system, value string
+
+		err = rows.Scan(&system, &value)
+
+		if err != nil {
+			return ratings, err
+		}
+
+		rating := &ProgrammeRating{System: system, Rating: value}
+
+		ratings = append(ratings, rating)
+	}
+
+	err = rows.Err()
+
+	if err != nil {
+		return ratings, err
+	}
+
+	return ratings, nil
 }
