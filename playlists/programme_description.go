@@ -16,6 +16,13 @@
 
 package playlists
 
+import (
+	"fmt"
+	"strings"
+
+	"github.com/logrusorgru/aurora"
+)
+
 // ProgrammeRating - programme rating
 type ProgrammeRating struct {
 	System string
@@ -38,4 +45,26 @@ type ProgrammeDescription struct {
 	Directors   []*string
 	Actors      []*ProgrammeActor
 	Rating      []*ProgrammeRating
+}
+
+const fProgrammeDescription = "\n\t%s\n\t%s\n\n\t%s\n\t%s\n"
+
+// ToString return the textual description of the programme
+func (pd *ProgrammeDescription) ToString() string {
+
+	var (
+		text     string
+		title    string
+		subtitle string
+		duration string
+		desc     string
+	)
+
+	title = pd.Title
+	subtitle = pd.SubTitle
+	desc = strings.Repeat("lorem ipsum ", 1000) //pd.Description
+
+	text = fmt.Sprintf(fProgrammeDescription, aurora.Bold(title), duration, subtitle, desc)
+
+	return text
 }

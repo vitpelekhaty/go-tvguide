@@ -27,6 +27,8 @@ import (
 	pl "../playlists"
 )
 
+var dv *TextScrollbox
+
 func quit(ui *gocui.Gui, view *gocui.View) error {
 	return gocui.ErrQuit
 }
@@ -77,11 +79,16 @@ func listDown(ui *gocui.Gui, view *gocui.View) error {
 
 		if pi, ok := ch.(*pl.PlaylistItem); ok {
 
-			t := CurrentTime()
+			ui.Update(func(g *gocui.Gui) error {
 
-			if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
-				return err
-			}
+				t := CurrentTime()
+
+				if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
+					return err
+				}
+
+				return nil
+			})
 		}
 
 	case viewGuide:
@@ -139,11 +146,16 @@ func listUp(ui *gocui.Gui, view *gocui.View) error {
 
 		if pi, ok := ch.(*pl.PlaylistItem); ok {
 
-			t := CurrentTime()
+			ui.Update(func(g *gocui.Gui) error {
 
-			if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
-				return err
-			}
+				t := CurrentTime()
+
+				if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
+					return err
+				}
+
+				return nil
+			})
 		}
 
 	case viewGuide:
@@ -201,11 +213,16 @@ func listPageUp(ui *gocui.Gui, view *gocui.View) error {
 
 		if pi, ok := ch.(*pl.PlaylistItem); ok {
 
-			t := CurrentTime()
+			ui.Update(func(g *gocui.Gui) error {
 
-			if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
-				return err
-			}
+				t := CurrentTime()
+
+				if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
+					return err
+				}
+
+				return nil
+			})
 		}
 
 	case viewGuide:
@@ -263,11 +280,16 @@ func listPageDown(ui *gocui.Gui, view *gocui.View) error {
 
 		if pi, ok := ch.(*pl.PlaylistItem); ok {
 
-			t := CurrentTime()
+			ui.Update(func(g *gocui.Gui) error {
 
-			if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
-				return err
-			}
+				t := CurrentTime()
+
+				if err := loadChannelGuide(tvg, pi.ID, lang, t); err != nil {
+					return err
+				}
+
+				return nil
+			})
 		}
 
 	case viewGuide:
@@ -522,15 +544,31 @@ func onEnter(ui *gocui.Gui, view *gocui.View) error {
 
 		curview = view
 
-		if err := createProgrammeView(ui, titleProgramme); err != nil {
-			return err
+		index := guide.ItemIndex()
+		item := guide.Item(index)
+
+		if p, ok := item.(*pl.Programme); ok {
+
+			pid := p.PID
+
+			pd, err := tvg.ProgrammeDescription(pid, lang)
+
+			if err != nil {
+				return err
+			}
+
+			desc := pd.ToString()
+
+			if err := createProgrammeView(ui, titleProgramme, desc); err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
 }
 
-func createProgrammeView(ui *gocui.Gui, title string) error {
+func createProgrammeView(ui *gocui.Gui, title, text string) error {
 
 	w, h := ui.Size()
 	v, err := ui.SetView(viewProgramme, w/6, h/6, w*5/6, h*5/6)
@@ -539,11 +577,24 @@ func createProgrammeView(ui *gocui.Gui, title string) error {
 		return err
 	}
 
-	v.Wrap = true
-
 	setTopWindowTitle(ui, viewProgramme, title)
 
-	_, err = ui.SetCurrentView(viewProgramme)
+	dv := CreateTextScrollbox(v)
+	err = dv.SetFocus(ui)
+
+	ui.Update(func(g *gocui.Gui) error {
+
+		if err = loadProgrammeDescription(text); err != nil {
+			return err
+		}
+
+		return nil
+	})
 
 	return err
+}
+
+func loadProgrammeDescription(text string) error {
+
+	return dv.SetText(text)
 }
