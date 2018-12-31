@@ -19,7 +19,6 @@ package ui
 import (
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/jroimartin/gocui"
@@ -597,6 +596,5 @@ func createProgrammeView(ui *gocui.Gui, title, text string) error {
 
 func loadProgrammeDescription(scrollbox *TextScrollbox, text string) error {
 
-	log.Println(text)
 	return scrollbox.SetText(text)
 }

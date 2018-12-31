@@ -18,12 +18,11 @@
 package ui
 
 import (
-	"bufio"
 	"fmt"
-	"strings"
-	"unicode/utf8"
 
 	"github.com/jroimartin/gocui"
+
+	strutils "../strutils"
 )
 
 // TextScrollbox - scrollbox control
@@ -62,18 +61,30 @@ func (scrollbox *TextScrollbox) Empty() bool {
 // SetText sets text of the scrollbox and redraw the view
 func (scrollbox *TextScrollbox) SetText(text string) error {
 
-	var lines []*string
+	var w int
 
-	lines = make([]*string, 0)
+	w = scrollbox.Width()
+	sl := strutils.StringList{RightMargin: w}
 
-	if err := scrollbox.splitText(text, lines); err != nil {
+	err := sl.SetText(text)
+
+	if err != nil {
 		return err
 	}
 
-	scrollbox.rows = make([]*string, len(lines))
+	scrollbox.rows = make([]*string, sl.Count())
 
-	for index, line := range lines {
-		scrollbox.rows[index] = line
+	for index := 0; index < len(scrollbox.rows); index++ {
+
+		var row string
+
+		row, err = sl.Item(index)
+
+		if err != nil {
+			return err
+		}
+
+		scrollbox.rows[index] = &row
 	}
 
 	return scrollbox.Draw()
@@ -103,79 +114,12 @@ func (scrollbox *TextScrollbox) DrawText(topidx int) error {
 
 	for _, row := range rows {
 
-		if _, err := fmt.Print(row); err != nil {
+		if _, err := fmt.Fprintln(scrollbox, row); err != nil {
 			return err
 		}
 	}
 
 	return nil
-}
-
-func (scrollbox *TextScrollbox) splitText(text string, rows []*string) (err error) {
-
-	var (
-		reader  *strings.Reader
-		scanner *bufio.Scanner
-		line    string
-	)
-
-	reader = strings.NewReader(text)
-	scanner = bufio.NewScanner(reader)
-
-	scanner.Split(bufio.ScanLines)
-
-	for scanner.Scan() {
-
-		line = scanner.Text()
-
-		if err = scrollbox.splitLine(line, rows); err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-func (scrollbox *TextScrollbox) splitLine(line string, rows []*string) (err error) {
-
-	var (
-		reader  *strings.Reader
-		scanner *bufio.Scanner
-		word    string
-		row     string
-		w, rc   int
-	)
-
-	w = scrollbox.Width()
-
-	reader = strings.NewReader(line)
-	scanner = bufio.NewScanner(reader)
-
-	scanner.Split(bufio.ScanWords)
-
-	for scanner.Scan() {
-
-		word = scanner.Text()
-		rc = utf8.RuneCountInString(word) + utf8.RuneCountInString(row)
-
-		if rc > w {
-
-			var s string
-
-			s = row
-			rows = append(rows, &s)
-
-			row = ""
-		}
-
-		if len(row) == 0 {
-			row = word
-		} else {
-			row = strings.Join([]string{row, word}, " ")
-		}
-	}
-
-	return
 }
 
 // Focused indicates whether the scrollbox has input focus
