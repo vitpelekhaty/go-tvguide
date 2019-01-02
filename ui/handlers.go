@@ -19,15 +19,15 @@ package ui
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jroimartin/gocui"
 	"github.com/logrusorgru/aurora"
 
 	pl "../playlists"
+	strutils "../strutils"
 )
-
-var dv *TextScrollbox
 
 func quit(ui *gocui.Gui, view *gocui.View) error {
 	return gocui.ErrQuit
@@ -557,9 +557,7 @@ func onEnter(ui *gocui.Gui, view *gocui.View) error {
 				return err
 			}
 
-			desc := pd.ToString()
-
-			if err := createProgrammeView(ui, titleProgramme, desc); err != nil {
+			if err := createProgrammeView(ui, titleProgramme, pd); err != nil {
 				return err
 			}
 		}
@@ -568,7 +566,7 @@ func onEnter(ui *gocui.Gui, view *gocui.View) error {
 	return nil
 }
 
-func createProgrammeView(ui *gocui.Gui, title, text string) error {
+func createProgrammeView(ui *gocui.Gui, title string, pd *pl.ProgrammeDescription) error {
 
 	w, h := ui.Size()
 	v, err := ui.SetView(viewProgramme, w/6, h/6, w*5/6, h*5/6)
@@ -577,24 +575,59 @@ func createProgrammeView(ui *gocui.Gui, title, text string) error {
 		return err
 	}
 
+	v.Wrap = true
+	v.Autoscroll = false
+
+	vw, _ := v.Size()
+
 	setTopWindowTitle(ui, viewProgramme, title)
 
-	dv := CreateTextScrollbox(v)
-	err = dv.SetFocus(ui)
+	var timeDescription string
+	timeDescription = pd.ProgrammeTimeDescription(CurrentTime())
 
-	ui.Update(func(g *gocui.Gui) error {
+	fmt.Fprint(v, " \n")
 
-		if err = loadProgrammeDescription(dv, text); err != nil {
-			return err
+	fmt.Fprintf(v, "%v\n", aurora.Bold(pd.Title))
+	fmt.Fprintf(v, "%v\n", timeDescription)
+
+	if strings.Trim(pd.SubTitle, " ") != "" {
+		fmt.Fprint(v, " \n")
+		fmt.Fprintf(v, "%v\n", pd.SubTitle)
+	}
+
+	if strings.Trim(pd.Description, " ") != "" {
+
+		fmt.Fprint(v, " \n")
+
+		var (
+			s  string
+			sl strutils.StringList
+		)
+
+		sl.RightMargin = vw
+
+		err = sl.SetText(pd.Description)
+
+		for index := 0; index < sl.Count(); index++ {
+
+			s, err = sl.Item(index)
+
+			if err != nil {
+				return err
+			}
+
+			fmt.Fprintf(v, "%s\n", s)
 		}
+	}
 
-		return nil
-	})
+	directors := pd.ProgrammeDirectors()
+
+	if strings.Trim(directors, " ") != "" {
+		fmt.Fprint(v, " \n")
+		fmt.Fprintf(v, "%v: %s\n", aurora.Bold("Directors"), directors)
+	}
+
+	_, err = ui.SetCurrentView(viewProgramme)
 
 	return err
-}
-
-func loadProgrammeDescription(scrollbox *TextScrollbox, text string) error {
-
-	return scrollbox.SetText(text)
 }
