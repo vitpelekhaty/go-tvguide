@@ -18,6 +18,7 @@ package playlists
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 )
@@ -61,11 +62,11 @@ func (pd *ProgrammeDescription) ProgrammeTimeDescription(timeCurrent time.Time) 
 
 	if inTime {
 		return fmt.Sprintf("%02d:%02d - %02d:%02d / %vmin / +%vmin", pd.StartHour(), pd.StartMinute(), pd.StopHour(), pd.StopMinute(),
-			d.Minutes(), cd.Minutes())
+			int(math.Round(d.Minutes())), int(math.Round(cd.Minutes())))
 	}
 
 	return fmt.Sprintf("%02d:%02d - %02d:%02d / %vmin", pd.StartHour(), pd.StartMinute(), pd.StopHour(), pd.StopMinute(),
-		d.Minutes())
+		int(math.Round(d.Minutes())))
 }
 
 // ProgrammeDirectors returns list of directors of the programme represented as string

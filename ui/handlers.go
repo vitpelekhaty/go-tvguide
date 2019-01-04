@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/jroimartin/gocui"
 	"github.com/logrusorgru/aurora"
@@ -578,56 +579,123 @@ func createProgrammeView(ui *gocui.Gui, title string, pd *pl.ProgrammeDescriptio
 	v.Wrap = true
 	v.Autoscroll = false
 
-	vw, _ := v.Size()
-
 	setTopWindowTitle(ui, viewProgramme, title)
 
-	var timeDescription string
-	timeDescription = pd.ProgrammeTimeDescription(CurrentTime())
-
-	fmt.Fprint(v, " \n")
-
-	fmt.Fprintf(v, "%v\n", aurora.Bold(pd.Title))
-	fmt.Fprintf(v, "%v\n", timeDescription)
-
-	if strings.Trim(pd.SubTitle, " ") != "" {
-		fmt.Fprint(v, " \n")
-		fmt.Fprintf(v, "%v\n", pd.SubTitle)
+	if err := printTextBlock(v, "", pd.Title, true, true); err != nil {
+		return err
 	}
 
-	if strings.Trim(pd.Description, " ") != "" {
+	var timeDescription = pd.ProgrammeTimeDescription(CurrentTime())
 
-		fmt.Fprint(v, " \n")
-
-		var (
-			s  string
-			sl strutils.StringList
-		)
-
-		sl.RightMargin = vw
-
-		err = sl.SetText(pd.Description)
-
-		for index := 0; index < sl.Count(); index++ {
-
-			s, err = sl.Item(index)
-
-			if err != nil {
-				return err
-			}
-
-			fmt.Fprintf(v, "%s\n", s)
-		}
+	if err = printTextBlock(v, "", timeDescription, false, false); err != nil {
+		return err
 	}
 
-	directors := pd.ProgrammeDirectors()
+	if err = printTextBlock(v, "", pd.SubTitle, false, true); err != nil {
+		return err
+	}
 
-	if strings.Trim(directors, " ") != "" {
-		fmt.Fprint(v, " \n")
-		fmt.Fprintf(v, "%v: %s\n", aurora.Bold("Directors"), directors)
+	if err = printTextBlock(v, "", pd.ProgrammeCategories(), false, true); err != nil {
+		return err
+	}
+
+	if err = printTextBlock(v, "", pd.Description, false, true); err != nil {
+		return err
+	}
+
+	var directors = pd.ProgrammeDirectors()
+
+	if err = printTextBlock(v, "Director(s)", directors, false, true); err != nil {
+		return err
+	}
+
+	var actors = pd.ProgrammeActors()
+	var sep = strutils.IsEmpty(directors)
+
+	if err = printTextBlock(v, "Actor(s)", actors, false, sep); err != nil {
+		return err
+	}
+
+	var countries = pd.ProgrammeCountries()
+	sep = strutils.IsEmpty(directors) && strutils.IsEmpty(actors)
+
+	if err = printTextBlock(v, "Country", countries, false, sep); err != nil {
+		return err
+	}
+
+	var rating = pd.ProgrammeRatings()
+	sep = strutils.IsEmpty(directors) && strutils.IsEmpty(actors) && strutils.IsEmpty(countries)
+
+	if err = printTextBlock(v, "Rating", rating, false, sep); err != nil {
+		return err
 	}
 
 	_, err = ui.SetCurrentView(viewProgramme)
 
 	return err
+}
+
+func printTextBlock(view *gocui.View, title, text string, bold, sep bool) error {
+
+	if strings.Trim(text, " ") == "" {
+		return nil
+	}
+
+	if sep {
+		fmt.Fprintf(view, " \n")
+	}
+
+	width, _ := view.Size()
+
+	var ttl = strings.Trim(title, " ")
+	var runeCount = utf8.RuneCountInString(ttl) + utf8.RuneCountInString(text)
+
+	if runeCount+2 > width {
+
+		var (
+			item string
+			sl   strutils.StringList
+		)
+
+		sl.RightMargin = width
+
+		err := sl.SetText(text)
+
+		if err != nil {
+			return err
+		}
+
+		if ttl != "" {
+			fmt.Fprintf(view, "%v:\n", aurora.Bold(ttl))
+		}
+
+		for index := 0; index < sl.Count(); index++ {
+
+			item, err = sl.Item(index)
+
+			if err != nil {
+				return err
+			}
+
+			if bold {
+				fmt.Fprintf(view, "%v\n", aurora.Bold(item))
+			} else {
+				fmt.Fprintf(view, "%s\n", item)
+			}
+		}
+
+		return nil
+	}
+
+	if ttl != "" {
+		fmt.Fprintf(view, "%v: ", aurora.Bold(ttl))
+	}
+
+	if bold {
+		fmt.Fprintf(view, "%v\n", aurora.Bold(text))
+	} else {
+		fmt.Fprintf(view, "%s\n", text)
+	}
+
+	return nil
 }
