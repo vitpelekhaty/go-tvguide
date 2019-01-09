@@ -22,7 +22,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/kardianos/osext"
+	osext "github.com/kardianos/osext"
 )
 
 func getPlaylistDatabaseName() string {

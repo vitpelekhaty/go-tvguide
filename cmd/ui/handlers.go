@@ -26,8 +26,8 @@ import (
 	"github.com/jroimartin/gocui"
 	"github.com/logrusorgru/aurora"
 
-	pl "../playlists"
-	strutils "../strutils"
+	pl "go-tvguide/internal/pkg/playlists"
+	strutils "go-tvguide/internal/pkg/strutils"
 )
 
 func quit(ui *gocui.Gui, view *gocui.View) error {

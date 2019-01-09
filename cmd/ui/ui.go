@@ -23,7 +23,7 @@ import (
 	"github.com/jroimartin/gocui"
 	"github.com/logrusorgru/aurora"
 
-	pl "../playlists"
+	pl "go-tvguide/internal/pkg/playlists"
 )
 
 const (

@@ -20,6 +20,8 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	xmltv "go-tvguide/pkg/xmltv"
 )
 
 type gpatch struct {
@@ -103,7 +105,7 @@ func CurrentGuide() *Guide {
 }
 
 // Read reads content of the tv guide
-func (g *Guide) Read(data []byte, parser *XMLTVParser) (err error) {
+func (g *Guide) Read(data []byte, parser *xmltv.XMLTVParser) (err error) {
 
 	onHead := parser.OnHead
 	onChannel := parser.OnChannel
@@ -154,11 +156,11 @@ func (g *Guide) Read(data []byte, parser *XMLTVParser) (err error) {
 		g.stmt[key] = stmt
 	}
 
-	parser.OnChannel = func(ch *XMLTVChannel) error {
+	parser.OnChannel = func(ch *xmltv.XMLTVChannel) error {
 		return g.appendChannel(ch)
 	}
 
-	parser.OnProgramme = func(p *XMLTVProgramme) error {
+	parser.OnProgramme = func(p *xmltv.XMLTVProgramme) error {
 		return g.appendProgramme(p)
 	}
 
@@ -179,7 +181,7 @@ func (g *Guide) Read(data []byte, parser *XMLTVParser) (err error) {
 	return
 }
 
-func (g *Guide) appendChannel(c *XMLTVChannel) (err error) {
+func (g *Guide) appendChannel(c *xmltv.XMLTVChannel) (err error) {
 
 	if c == nil {
 		return errors.New("Guide.AppendChannel: cannot append an empty channel")
@@ -210,7 +212,7 @@ func (g *Guide) appendChannel(c *XMLTVChannel) (err error) {
 
 	if len(c.DisplayName) > 0 {
 
-		dn := make([]*XMLTVChannelDisplayName, len(c.DisplayName))
+		dn := make([]*xmltv.XMLTVChannelDisplayName, len(c.DisplayName))
 
 		for index, d := range c.DisplayName {
 			dn[index] = &d
@@ -223,7 +225,7 @@ func (g *Guide) appendChannel(c *XMLTVChannel) (err error) {
 
 	if len(c.URL) > 0 {
 
-		urls := make([]*XMLTVChannelURL, len(c.URL))
+		urls := make([]*xmltv.XMLTVChannelURL, len(c.URL))
 
 		for index, url := range c.URL {
 			urls[index] = &url
@@ -237,7 +239,7 @@ func (g *Guide) appendChannel(c *XMLTVChannel) (err error) {
 	return nil
 }
 
-func (g *Guide) appendChannelDisplayNames(cid int64, d []*XMLTVChannelDisplayName) (err error) {
+func (g *Guide) appendChannelDisplayNames(cid int64, d []*xmltv.XMLTVChannelDisplayName) (err error) {
 
 	for _, dn := range d {
 		if _, err = g.stmt["cmdAppendChannelDisplayName"].Exec(&cid, &dn.Lang, &dn.Value); err != nil {
@@ -248,7 +250,7 @@ func (g *Guide) appendChannelDisplayNames(cid int64, d []*XMLTVChannelDisplayNam
 	return
 }
 
-func (g *Guide) appendChannelURL(cid int64, urls []*XMLTVChannelURL) (err error) {
+func (g *Guide) appendChannelURL(cid int64, urls []*xmltv.XMLTVChannelURL) (err error) {
 
 	for _, url := range urls {
 		if _, err = g.stmt["cmdAppendChannelURL"].Exec(&cid, &url.Value); err != nil {
@@ -259,7 +261,7 @@ func (g *Guide) appendChannelURL(cid int64, urls []*XMLTVChannelURL) (err error)
 	return
 }
 
-func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
+func (g *Guide) appendProgramme(p *xmltv.XMLTVProgramme) (err error) {
 
 	var pid int64
 
@@ -396,11 +398,11 @@ func (g *Guide) appendProgramme(p *XMLTVProgramme) (err error) {
 	return
 }
 
-func (g *Guide) checkAppendProgrammeTitle(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeTitle(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Title) > 0 {
 
-		titles := make([]*XMLTVProgrammeTitle, len(p.Title))
+		titles := make([]*xmltv.XMLTVProgrammeTitle, len(p.Title))
 
 		for idx, t := range p.Title {
 			titles[idx] = &t
@@ -414,11 +416,11 @@ func (g *Guide) checkAppendProgrammeTitle(pid int64, p *XMLTVProgramme) (err err
 	return
 }
 
-func (g *Guide) checkAppendProgrammeSubTitle(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeSubTitle(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.SubTitle) > 0 {
 
-		subtitles := make([]*XMLTVProgrammeSubTitle, len(p.SubTitle))
+		subtitles := make([]*xmltv.XMLTVProgrammeSubTitle, len(p.SubTitle))
 
 		for idx, t := range p.SubTitle {
 			subtitles[idx] = &t
@@ -432,11 +434,11 @@ func (g *Guide) checkAppendProgrammeSubTitle(pid int64, p *XMLTVProgramme) (err 
 	return
 }
 
-func (g *Guide) checkAppendProgrammeDesc(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeDesc(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Desc) > 0 {
 
-		desc := make([]*XMLTVProgrammeDesc, len(p.Desc))
+		desc := make([]*xmltv.XMLTVProgrammeDesc, len(p.Desc))
 
 		for idx, d := range p.Desc {
 			desc[idx] = &d
@@ -450,11 +452,11 @@ func (g *Guide) checkAppendProgrammeDesc(pid int64, p *XMLTVProgramme) (err erro
 	return
 }
 
-func (g *Guide) checkAppendProgrammeActors(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeActors(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Actors) > 0 {
 
-		actors := make([]*XMLTVProgrammeActor, len(p.Credits.Actors))
+		actors := make([]*xmltv.XMLTVProgrammeActor, len(p.Credits.Actors))
 
 		for idx, a := range p.Credits.Actors {
 			actors[idx] = &a
@@ -468,7 +470,7 @@ func (g *Guide) checkAppendProgrammeActors(pid int64, p *XMLTVProgramme) (err er
 	return
 }
 
-func (g *Guide) checkAppendProgrammeAdapters(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeAdapters(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Adapters) > 0 {
 
@@ -486,7 +488,7 @@ func (g *Guide) checkAppendProgrammeAdapters(pid int64, p *XMLTVProgramme) (err 
 	return
 }
 
-func (g *Guide) checkAppendProgrammeCommentators(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeCommentators(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Commentators) > 0 {
 
@@ -504,7 +506,7 @@ func (g *Guide) checkAppendProgrammeCommentators(pid int64, p *XMLTVProgramme) (
 	return
 }
 
-func (g *Guide) checkAppendProgrammeComposers(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeComposers(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Composers) > 0 {
 
@@ -522,7 +524,7 @@ func (g *Guide) checkAppendProgrammeComposers(pid int64, p *XMLTVProgramme) (err
 	return
 }
 
-func (g *Guide) checkAppendProgrammeDirectors(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeDirectors(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Directors) > 0 {
 
@@ -540,7 +542,7 @@ func (g *Guide) checkAppendProgrammeDirectors(pid int64, p *XMLTVProgramme) (err
 	return
 }
 
-func (g *Guide) checkAppendProgrammeEditors(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeEditors(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Editors) > 0 {
 
@@ -558,7 +560,7 @@ func (g *Guide) checkAppendProgrammeEditors(pid int64, p *XMLTVProgramme) (err e
 	return
 }
 
-func (g *Guide) checkAppendProgrammeGuests(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeGuests(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Guests) > 0 {
 
@@ -576,7 +578,7 @@ func (g *Guide) checkAppendProgrammeGuests(pid int64, p *XMLTVProgramme) (err er
 	return
 }
 
-func (g *Guide) checkAppendProgrammePresenters(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammePresenters(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Presenters) > 0 {
 
@@ -594,7 +596,7 @@ func (g *Guide) checkAppendProgrammePresenters(pid int64, p *XMLTVProgramme) (er
 	return
 }
 
-func (g *Guide) checkAppendProgrammeProducers(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeProducers(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Producers) > 0 {
 
@@ -612,7 +614,7 @@ func (g *Guide) checkAppendProgrammeProducers(pid int64, p *XMLTVProgramme) (err
 	return
 }
 
-func (g *Guide) checkAppendProgrammeWriters(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeWriters(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Credits.Writers) > 0 {
 
@@ -630,7 +632,7 @@ func (g *Guide) checkAppendProgrammeWriters(pid int64, p *XMLTVProgramme) (err e
 	return
 }
 
-func (g *Guide) checkAppendProgrammeDates(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeDates(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Dates) > 0 {
 
@@ -648,11 +650,11 @@ func (g *Guide) checkAppendProgrammeDates(pid int64, p *XMLTVProgramme) (err err
 	return
 }
 
-func (g *Guide) checkAppendProgrammeCategories(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeCategories(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Categories) > 0 {
 
-		categories := make([]*XMLTVProgrammeCategory, len(p.Categories))
+		categories := make([]*xmltv.XMLTVProgrammeCategory, len(p.Categories))
 
 		for idx, c := range p.Categories {
 			categories[idx] = &c
@@ -666,11 +668,11 @@ func (g *Guide) checkAppendProgrammeCategories(pid int64, p *XMLTVProgramme) (er
 	return
 }
 
-func (g *Guide) checkAppendProgrammeKeywords(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeKeywords(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Keywords) > 0 {
 
-		keywords := make([]*XMLTVProgrammeKeyword, len(p.Keywords))
+		keywords := make([]*xmltv.XMLTVProgrammeKeyword, len(p.Keywords))
 
 		for idx, k := range p.Keywords {
 			keywords[idx] = &k
@@ -684,11 +686,11 @@ func (g *Guide) checkAppendProgrammeKeywords(pid int64, p *XMLTVProgramme) (err 
 	return
 }
 
-func (g *Guide) checkAppendProgrammeLanguages(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeLanguages(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Languages) > 0 {
 
-		languages := make([]*XMLTVProgrammeLanguage, len(p.Languages))
+		languages := make([]*xmltv.XMLTVProgrammeLanguage, len(p.Languages))
 
 		for idx, lang := range p.Languages {
 			languages[idx] = &lang
@@ -702,11 +704,11 @@ func (g *Guide) checkAppendProgrammeLanguages(pid int64, p *XMLTVProgramme) (err
 	return
 }
 
-func (g *Guide) checkAppendProgrammeOriginalLanguages(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeOriginalLanguages(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.OriginalLanguages) > 0 {
 
-		languages := make([]*XMLTVProgrammeOriginalLanguage, len(p.OriginalLanguages))
+		languages := make([]*xmltv.XMLTVProgrammeOriginalLanguage, len(p.OriginalLanguages))
 
 		for idx, lang := range p.OriginalLanguages {
 			languages[idx] = &lang
@@ -720,11 +722,11 @@ func (g *Guide) checkAppendProgrammeOriginalLanguages(pid int64, p *XMLTVProgram
 	return
 }
 
-func (g *Guide) checkAppendProgrammeLength(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeLength(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Length) > 0 {
 
-		length := make([]*XMLTVProgrammeLength, len(p.Length))
+		length := make([]*xmltv.XMLTVProgrammeLength, len(p.Length))
 
 		for idx, l := range p.Length {
 			length[idx] = &l
@@ -738,11 +740,11 @@ func (g *Guide) checkAppendProgrammeLength(pid int64, p *XMLTVProgramme) (err er
 	return
 }
 
-func (g *Guide) checkAppendProgrammeIcon(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeIcon(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Icon) > 0 {
 
-		icons := make([]*XMLTVProgrammeIcon, len(p.Icon))
+		icons := make([]*xmltv.XMLTVProgrammeIcon, len(p.Icon))
 
 		for idx, icon := range p.Icon {
 			icons[idx] = &icon
@@ -756,11 +758,11 @@ func (g *Guide) checkAppendProgrammeIcon(pid int64, p *XMLTVProgramme) (err erro
 	return
 }
 
-func (g *Guide) checkAppendProgrammeCountry(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeCountry(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Country) > 0 {
 
-		countries := make([]*XMLTVProgrammeCountry, len(p.Country))
+		countries := make([]*xmltv.XMLTVProgrammeCountry, len(p.Country))
 
 		for idx, country := range p.Country {
 			countries[idx] = &country
@@ -774,11 +776,11 @@ func (g *Guide) checkAppendProgrammeCountry(pid int64, p *XMLTVProgramme) (err e
 	return
 }
 
-func (g *Guide) checkAppendProgrammeEpisodeNum(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeEpisodeNum(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.EpisodeNum) > 0 {
 
-		enums := make([]*XMLTVProgrammeEpisodeNum, len(p.EpisodeNum))
+		enums := make([]*xmltv.XMLTVProgrammeEpisodeNum, len(p.EpisodeNum))
 
 		for idx, enum := range p.EpisodeNum {
 			enums[idx] = &enum
@@ -792,11 +794,11 @@ func (g *Guide) checkAppendProgrammeEpisodeNum(pid int64, p *XMLTVProgramme) (er
 	return
 }
 
-func (g *Guide) checkAppendProgrammeVideo(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeVideo(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Video) > 0 {
 
-		video := make([]*XMLTVProgrammeVideo, len(p.Video))
+		video := make([]*xmltv.XMLTVProgrammeVideo, len(p.Video))
 
 		for idx, v := range p.Video {
 			video[idx] = &v
@@ -810,11 +812,11 @@ func (g *Guide) checkAppendProgrammeVideo(pid int64, p *XMLTVProgramme) (err err
 	return
 }
 
-func (g *Guide) checkAppendProgrammeAudio(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeAudio(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Audio) > 0 {
 
-		audio := make([]*XMLTVProgrammeAudio, len(p.Audio))
+		audio := make([]*xmltv.XMLTVProgrammeAudio, len(p.Audio))
 
 		for idx, a := range p.Audio {
 			audio[idx] = &a
@@ -828,11 +830,11 @@ func (g *Guide) checkAppendProgrammeAudio(pid int64, p *XMLTVProgramme) (err err
 	return
 }
 
-func (g *Guide) checkAppendProgrammePreviouslyShown(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammePreviouslyShown(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.PreviouslyShown) > 0 {
 
-		shown := make([]*XMLTVProgrammePreviouslyShown, len(p.PreviouslyShown))
+		shown := make([]*xmltv.XMLTVProgrammePreviouslyShown, len(p.PreviouslyShown))
 
 		for idx, s := range p.PreviouslyShown {
 			shown[idx] = &s
@@ -846,11 +848,11 @@ func (g *Guide) checkAppendProgrammePreviouslyShown(pid int64, p *XMLTVProgramme
 	return
 }
 
-func (g *Guide) checkAppendProgrammePremiere(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammePremiere(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Premiere) > 0 {
 
-		premiere := make([]*XMLTVProgrammePremiere, len(p.Premiere))
+		premiere := make([]*xmltv.XMLTVProgrammePremiere, len(p.Premiere))
 
 		for idx, prem := range p.Premiere {
 			premiere[idx] = &prem
@@ -864,11 +866,11 @@ func (g *Guide) checkAppendProgrammePremiere(pid int64, p *XMLTVProgramme) (err 
 	return
 }
 
-func (g *Guide) checkAppendProgrammeLastChance(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeLastChance(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.LastChance) > 0 {
 
-		lc := make([]*XMLTVProgrammmeLastChance, len(p.LastChance))
+		lc := make([]*xmltv.XMLTVProgrammmeLastChance, len(p.LastChance))
 
 		for idx, l := range p.LastChance {
 			lc[idx] = &l
@@ -882,11 +884,11 @@ func (g *Guide) checkAppendProgrammeLastChance(pid int64, p *XMLTVProgramme) (er
 	return
 }
 
-func (g *Guide) checkAppendProgrammeSubtitles(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeSubtitles(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Subtitles) > 0 {
 
-		subtitles := make([]*XMLTVProgrammeSubtitles, len(p.Subtitles))
+		subtitles := make([]*xmltv.XMLTVProgrammeSubtitles, len(p.Subtitles))
 
 		for idx, s := range p.Subtitles {
 			subtitles[idx] = &s
@@ -900,11 +902,11 @@ func (g *Guide) checkAppendProgrammeSubtitles(pid int64, p *XMLTVProgramme) (err
 	return
 }
 
-func (g *Guide) checkAppendProgrammeRating(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeRating(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Rating) > 0 {
 
-		rating := make([]*XMLTVProgrammeRating, len(p.Rating))
+		rating := make([]*xmltv.XMLTVProgrammeRating, len(p.Rating))
 
 		for idx, r := range p.Rating {
 			rating[idx] = &r
@@ -918,11 +920,11 @@ func (g *Guide) checkAppendProgrammeRating(pid int64, p *XMLTVProgramme) (err er
 	return
 }
 
-func (g *Guide) checkAppendProgrammeStarRating(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeStarRating(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.StarRating) > 0 {
 
-		rating := make([]*XMLTVProgrammeStarRating, len(p.StarRating))
+		rating := make([]*xmltv.XMLTVProgrammeStarRating, len(p.StarRating))
 
 		for idx, r := range p.StarRating {
 			rating[idx] = &r
@@ -936,11 +938,11 @@ func (g *Guide) checkAppendProgrammeStarRating(pid int64, p *XMLTVProgramme) (er
 	return
 }
 
-func (g *Guide) checkAppendProgrammeReview(pid int64, p *XMLTVProgramme) (err error) {
+func (g *Guide) checkAppendProgrammeReview(pid int64, p *xmltv.XMLTVProgramme) (err error) {
 
 	if len(p.Review) > 0 {
 
-		review := make([]*XMLTVProgrammeReview, len(p.Review))
+		review := make([]*xmltv.XMLTVProgrammeReview, len(p.Review))
 
 		for idx, r := range p.Review {
 			review[idx] = &r
@@ -954,20 +956,20 @@ func (g *Guide) checkAppendProgrammeReview(pid int64, p *XMLTVProgramme) (err er
 	return
 }
 
-func (g *Guide) appendProgrammeRecord(p *XMLTVProgramme) (int64, error) {
+func (g *Guide) appendProgrammeRecord(p *xmltv.XMLTVProgramme) (int64, error) {
 
 	var pid int64 = -1
 
 	cs := g.stmt["cmdAppendGuideProgramme"]
 	us := g.stmt["cmdUpdateGuideProgrammePID"]
 
-	start, err := TimeOfProgramme(p.Start)
+	start, err := xmltv.TimeOfProgramme(p.Start)
 
 	if err != nil {
 		return pid, err
 	}
 
-	stop, err := TimeOfProgramme(p.Stop)
+	stop, err := xmltv.TimeOfProgramme(p.Stop)
 
 	if err != nil {
 		return pid, err
@@ -991,7 +993,7 @@ func (g *Guide) appendProgrammeRecord(p *XMLTVProgramme) (int64, error) {
 	return pid, err
 }
 
-func (g *Guide) appendProgrammeTitle(pid int64, titles []*XMLTVProgrammeTitle) (err error) {
+func (g *Guide) appendProgrammeTitle(pid int64, titles []*xmltv.XMLTVProgrammeTitle) (err error) {
 
 	for _, t := range titles {
 		if _, err = g.stmt["cmdAppendProgrammeTitle"].Exec(&pid, &t.Lang, &t.Value); err != nil {
@@ -1002,7 +1004,7 @@ func (g *Guide) appendProgrammeTitle(pid int64, titles []*XMLTVProgrammeTitle) (
 	return
 }
 
-func (g *Guide) appendProgrammeSubTitle(pid int64, subtitles []*XMLTVProgrammeSubTitle) (err error) {
+func (g *Guide) appendProgrammeSubTitle(pid int64, subtitles []*xmltv.XMLTVProgrammeSubTitle) (err error) {
 
 	for _, s := range subtitles {
 		if _, err = g.stmt["cmdAppendProgrammeSubTitle"].Exec(&pid, &s.Lang, &s.Value); err != nil {
@@ -1013,7 +1015,7 @@ func (g *Guide) appendProgrammeSubTitle(pid int64, subtitles []*XMLTVProgrammeSu
 	return
 }
 
-func (g *Guide) appendProgrammeDesc(pid int64, desc []*XMLTVProgrammeDesc) (err error) {
+func (g *Guide) appendProgrammeDesc(pid int64, desc []*xmltv.XMLTVProgrammeDesc) (err error) {
 
 	for _, d := range desc {
 		if _, err = g.stmt["cmdAppendProgrammeDesc"].Exec(&pid, &d.Lang, &d.Value); err != nil {
@@ -1024,7 +1026,7 @@ func (g *Guide) appendProgrammeDesc(pid int64, desc []*XMLTVProgrammeDesc) (err 
 	return
 }
 
-func (g *Guide) appendProgrammeActors(pid int64, actors []*XMLTVProgrammeActor) (err error) {
+func (g *Guide) appendProgrammeActors(pid int64, actors []*xmltv.XMLTVProgrammeActor) (err error) {
 
 	for _, a := range actors {
 		if _, err = g.stmt["cmdAppendProgrammeActors"].Exec(&pid, &a.Name, &a.Role); err != nil {
@@ -1146,7 +1148,7 @@ func (g *Guide) appendProgrammeDates(pid int64, dates []*string) (err error) {
 	return
 }
 
-func (g *Guide) appendProgrammeCategories(pid int64, categories []*XMLTVProgrammeCategory) (err error) {
+func (g *Guide) appendProgrammeCategories(pid int64, categories []*xmltv.XMLTVProgrammeCategory) (err error) {
 
 	for _, c := range categories {
 		if _, err = g.stmt["cmdAppendProgrammeCategories"].Exec(&pid, &c.Lang, &c.Value); err != nil {
@@ -1157,7 +1159,7 @@ func (g *Guide) appendProgrammeCategories(pid int64, categories []*XMLTVProgramm
 	return
 }
 
-func (g *Guide) appendProgrammeKeywords(pid int64, keywords []*XMLTVProgrammeKeyword) (err error) {
+func (g *Guide) appendProgrammeKeywords(pid int64, keywords []*xmltv.XMLTVProgrammeKeyword) (err error) {
 
 	for _, k := range keywords {
 		if _, err = g.stmt["cmdAppendProgrammeKeywords"].Exec(&pid, &k.Lang, &k.Value); err != nil {
@@ -1168,7 +1170,7 @@ func (g *Guide) appendProgrammeKeywords(pid int64, keywords []*XMLTVProgrammeKey
 	return
 }
 
-func (g *Guide) appendProgrammeLanguages(pid int64, languages []*XMLTVProgrammeLanguage) (err error) {
+func (g *Guide) appendProgrammeLanguages(pid int64, languages []*xmltv.XMLTVProgrammeLanguage) (err error) {
 
 	for _, lang := range languages {
 		if _, err = g.stmt["cmdAppendProgrammeLanguage"].Exec(&pid, &lang.Lang, &lang.Value); err != nil {
@@ -1179,7 +1181,7 @@ func (g *Guide) appendProgrammeLanguages(pid int64, languages []*XMLTVProgrammeL
 	return
 }
 
-func (g *Guide) appendProgrammeOriginalLanguages(pid int64, languages []*XMLTVProgrammeOriginalLanguage) (err error) {
+func (g *Guide) appendProgrammeOriginalLanguages(pid int64, languages []*xmltv.XMLTVProgrammeOriginalLanguage) (err error) {
 
 	for _, lang := range languages {
 		if _, err = g.stmt["cmdAppendProgrammeOriginalLanguage"].Exec(&pid, &lang.Lang, &lang.Value); err != nil {
@@ -1190,7 +1192,7 @@ func (g *Guide) appendProgrammeOriginalLanguages(pid int64, languages []*XMLTVPr
 	return
 }
 
-func (g *Guide) appendProgrammeLength(pid int64, length []*XMLTVProgrammeLength) (err error) {
+func (g *Guide) appendProgrammeLength(pid int64, length []*xmltv.XMLTVProgrammeLength) (err error) {
 
 	for _, l := range length {
 		if _, err = g.stmt["cmdAppendProgrammeLength"].Exec(&pid, &l.Value, &l.Units); err != nil {
@@ -1201,7 +1203,7 @@ func (g *Guide) appendProgrammeLength(pid int64, length []*XMLTVProgrammeLength)
 	return
 }
 
-func (g *Guide) appendProgrammeIcon(pid int64, icons []*XMLTVProgrammeIcon) (err error) {
+func (g *Guide) appendProgrammeIcon(pid int64, icons []*xmltv.XMLTVProgrammeIcon) (err error) {
 
 	for _, icon := range icons {
 		if _, err = g.stmt["cmdAppendProgrammeIcon"].Exec(&pid, &icon.Src, &icon.Width, &icon.Height); err != nil {
@@ -1212,7 +1214,7 @@ func (g *Guide) appendProgrammeIcon(pid int64, icons []*XMLTVProgrammeIcon) (err
 	return
 }
 
-func (g *Guide) appendProgrammeCountry(pid int64, countries []*XMLTVProgrammeCountry) (err error) {
+func (g *Guide) appendProgrammeCountry(pid int64, countries []*xmltv.XMLTVProgrammeCountry) (err error) {
 
 	for _, country := range countries {
 		if _, err = g.stmt["cmdAppendProgrammeCountries"].Exec(&pid, &country.Lang, &country.Value); err != nil {
@@ -1223,7 +1225,7 @@ func (g *Guide) appendProgrammeCountry(pid int64, countries []*XMLTVProgrammeCou
 	return
 }
 
-func (g *Guide) appendProgrammeEpisodeNum(pid int64, enums []*XMLTVProgrammeEpisodeNum) (err error) {
+func (g *Guide) appendProgrammeEpisodeNum(pid int64, enums []*xmltv.XMLTVProgrammeEpisodeNum) (err error) {
 
 	for _, enum := range enums {
 		if _, err = g.stmt["cmdAppendProgrammeEpisodeNum"].Exec(&pid, &enum.System, &enum.Value); err != nil {
@@ -1234,7 +1236,7 @@ func (g *Guide) appendProgrammeEpisodeNum(pid int64, enums []*XMLTVProgrammeEpis
 	return
 }
 
-func (g *Guide) appendProgrammeVideo(pid int64, video []*XMLTVProgrammeVideo) (err error) {
+func (g *Guide) appendProgrammeVideo(pid int64, video []*xmltv.XMLTVProgrammeVideo) (err error) {
 
 	for _, v := range video {
 		if _, err = g.stmt["cmdAppendProgrammeVideo"].Exec(&pid, &v.Present, &v.Colour, &v.Aspect, &v.Quality); err != nil {
@@ -1245,7 +1247,7 @@ func (g *Guide) appendProgrammeVideo(pid int64, video []*XMLTVProgrammeVideo) (e
 	return
 }
 
-func (g *Guide) appendProgrammeAudio(pid int64, audio []*XMLTVProgrammeAudio) (err error) {
+func (g *Guide) appendProgrammeAudio(pid int64, audio []*xmltv.XMLTVProgrammeAudio) (err error) {
 
 	for _, a := range audio {
 		if _, err = g.stmt["cmdAppendProgrammeAudio"].Exec(&pid, &a.Present, &a.Stereo); err != nil {
@@ -1256,7 +1258,7 @@ func (g *Guide) appendProgrammeAudio(pid int64, audio []*XMLTVProgrammeAudio) (e
 	return
 }
 
-func (g *Guide) appendProgrammePreviouslyShown(pid int64, shown []*XMLTVProgrammePreviouslyShown) (err error) {
+func (g *Guide) appendProgrammePreviouslyShown(pid int64, shown []*xmltv.XMLTVProgrammePreviouslyShown) (err error) {
 
 	for _, s := range shown {
 		if _, err = g.stmt["cmdAppendProgrammePreviouslyShown"].Exec(&pid, &s.Start, &s.Channel); err != nil {
@@ -1267,7 +1269,7 @@ func (g *Guide) appendProgrammePreviouslyShown(pid int64, shown []*XMLTVProgramm
 	return
 }
 
-func (g *Guide) appendProgrammePremiere(pid int64, premiere []*XMLTVProgrammePremiere) (err error) {
+func (g *Guide) appendProgrammePremiere(pid int64, premiere []*xmltv.XMLTVProgrammePremiere) (err error) {
 
 	for _, prem := range premiere {
 		if _, err = g.stmt["cmdAppendProgrammePremiere"].Exec(&pid, &prem.Lang, &prem.Value); err != nil {
@@ -1278,7 +1280,7 @@ func (g *Guide) appendProgrammePremiere(pid int64, premiere []*XMLTVProgrammePre
 	return
 }
 
-func (g *Guide) appendProgrammeLastChance(pid int64, ls []*XMLTVProgrammmeLastChance) (err error) {
+func (g *Guide) appendProgrammeLastChance(pid int64, ls []*xmltv.XMLTVProgrammmeLastChance) (err error) {
 
 	for _, l := range ls {
 		if _, err = g.stmt["cmdAppendProgrammeLastChance"].Exec(&pid, &l.Lang, &l.Value); err != nil {
@@ -1289,7 +1291,7 @@ func (g *Guide) appendProgrammeLastChance(pid int64, ls []*XMLTVProgrammmeLastCh
 	return
 }
 
-func (g *Guide) appendProgrammeSubtitles(pid int64, subtitles []*XMLTVProgrammeSubtitles) (err error) {
+func (g *Guide) appendProgrammeSubtitles(pid int64, subtitles []*xmltv.XMLTVProgrammeSubtitles) (err error) {
 
 	var stype string
 
@@ -1311,7 +1313,7 @@ func (g *Guide) appendProgrammeSubtitles(pid int64, subtitles []*XMLTVProgrammeS
 	return
 }
 
-func (g *Guide) appendProgrammeRating(pid int64, rating []*XMLTVProgrammeRating) (err error) {
+func (g *Guide) appendProgrammeRating(pid int64, rating []*xmltv.XMLTVProgrammeRating) (err error) {
 
 	var (
 		s     string
@@ -1338,7 +1340,7 @@ func (g *Guide) appendProgrammeRating(pid int64, rating []*XMLTVProgrammeRating)
 	return
 }
 
-func (g *Guide) appendProgrammeStarRating(pid int64, rating []*XMLTVProgrammeStarRating) (err error) {
+func (g *Guide) appendProgrammeStarRating(pid int64, rating []*xmltv.XMLTVProgrammeStarRating) (err error) {
 
 	var (
 		s     string
@@ -1365,7 +1367,7 @@ func (g *Guide) appendProgrammeStarRating(pid int64, rating []*XMLTVProgrammeSta
 	return
 }
 
-func (g *Guide) appendProgrammeReview(pid int64, review []*XMLTVProgrammeReview) (err error) {
+func (g *Guide) appendProgrammeReview(pid int64, review []*xmltv.XMLTVProgrammeReview) (err error) {
 
 	for _, r := range review {
 		if _, err = g.stmt["cmdAppendProgrammeReview"].Exec(&pid, &r.Type, &r.Source, r.Reviewer, &r.Lang, &r.Value); err != nil {
@@ -1462,7 +1464,7 @@ func (g *Guide) ChannelGuide(cid string, lang string, t time.Time) ([]*Programme
 			return make([]*Programme, 0), err
 		}
 
-		start, err = TimeOfProgramme(sstart)
+		start, err = xmltv.TimeOfProgramme(sstart)
 
 		if err != nil {
 			return make([]*Programme, 0), err
@@ -1470,7 +1472,7 @@ func (g *Guide) ChannelGuide(cid string, lang string, t time.Time) ([]*Programme
 
 		if sstop.Valid {
 
-			stop, err = TimeOfProgramme(sstop.String)
+			stop, err = xmltv.TimeOfProgramme(sstop.String)
 
 			if err != nil {
 				return make([]*Programme, 0), err
@@ -1525,7 +1527,7 @@ func (g *Guide) ProgrammeDescription(pid int, lang string) (*ProgrammeDescriptio
 		return pd, err
 	}
 
-	start, err = TimeOfProgramme(sstart)
+	start, err = xmltv.TimeOfProgramme(sstart)
 
 	if err != nil {
 		return pd, err
@@ -1535,7 +1537,7 @@ func (g *Guide) ProgrammeDescription(pid int, lang string) (*ProgrammeDescriptio
 
 	if sstop.Valid {
 
-		stop, err = TimeOfProgramme(sstop.String)
+		stop, err = xmltv.TimeOfProgramme(sstop.String)
 
 		if err != nil {
 			return pd, err

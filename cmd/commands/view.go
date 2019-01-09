@@ -26,8 +26,10 @@ import (
 	"github.com/jroimartin/gocui"
 	"github.com/spf13/cobra"
 
-	pl "../playlists"
-	ui "../ui"
+	ui "go-tvguide/cmd/ui"
+	loaders "go-tvguide/internal/pkg/loaders"
+	pl "go-tvguide/internal/pkg/playlists"
+	xmltv "go-tvguide/pkg/xmltv"
 )
 
 var cmdView = &cobra.Command{
@@ -38,7 +40,7 @@ var cmdView = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		path := PlaylistPath
-		loader := pl.Loader(path)
+		loader := loaders.Loader(path)
 
 		data, err := loadPlaylistOrGuide(loader, path)
 
@@ -61,7 +63,7 @@ var cmdView = &cobra.Command{
 		}
 
 		gpath := parser.Guide()
-		gloader := pl.Loader(gpath)
+		gloader := loaders.Loader(gpath)
 
 		data, err = loadPlaylistOrGuide(gloader, gpath)
 
@@ -70,9 +72,9 @@ var cmdView = &cobra.Command{
 		}
 
 		guide := pl.CurrentGuide()
-		gparser := &pl.XMLTVParser{}
+		gparser := &xmltv.XMLTVParser{}
 
-		err = func(g *pl.Guide, p *pl.XMLTVParser, d []byte) error {
+		err = func(g *pl.Guide, p *xmltv.XMLTVParser, d []byte) error {
 
 			st := time.Now()
 
@@ -110,20 +112,20 @@ var cmdView = &cobra.Command{
 	},
 }
 
-func loadPlaylistOrGuide(loader pl.ILoader, path string) ([]byte, error) {
+func loadPlaylistOrGuide(loader loaders.ILoader, path string) ([]byte, error) {
 
 	data := make([]byte, 0)
 
 	switch loader.(type) {
-	case *pl.FileLoader:
-		if floader, ok := loader.(*pl.FileLoader); ok {
+	case *loaders.FileLoader:
+		if floader, ok := loader.(*loaders.FileLoader); ok {
 			return loadFromFile(floader, path)
 		}
 
 		return data, errors.New("Playlist or guide loading: something wrong")
 
-	case *pl.HTTPLoader:
-		if nloader, ok := loader.(*pl.HTTPLoader); ok {
+	case *loaders.HTTPLoader:
+		if nloader, ok := loader.(*loaders.HTTPLoader); ok {
 			return loadFromURL(nloader, path)
 		}
 
@@ -136,13 +138,13 @@ func loadPlaylistOrGuide(loader pl.ILoader, path string) ([]byte, error) {
 	return data, nil
 }
 
-func loadFromFile(loader *pl.FileLoader, path string) ([]byte, error) {
+func loadFromFile(loader *loaders.FileLoader, path string) ([]byte, error) {
 
 	fmt.Printf("Loading file %s\t...\n", path)
 	return loader.Load(path)
 }
 
-func loadFromURL(loader *pl.HTTPLoader, url string) ([]byte, error) {
+func loadFromURL(loader *loaders.HTTPLoader, url string) ([]byte, error) {
 
 	comment := "Downloading " + url
 

@@ -21,7 +21,7 @@ import (
 	"os"
 	"runtime"
 
-	commands "./commands"
+	commands "go-tvguide/cmd/commands"
 )
 
 func main() {
